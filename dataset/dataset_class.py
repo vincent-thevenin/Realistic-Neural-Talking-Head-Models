@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import os
 
-from video_extraction_conversion import *
+from .video_extraction_conversion import *
 
 
 class VidDataSet(Dataset):
