@@ -3,7 +3,7 @@ My implementation of Few-Shot Adversarial Learning of Realistic Neural Talking H
 
 ## Prerequisites
 
-### Loading and converting the caffe VGGFace model to pytorch for the content loss:
+### 1.Loading and converting the caffe VGGFace model to pytorch for the content loss:
 Follow these instructions to install the VGGFace from the paper (https://arxiv.org/pdf/1703.07332.pdf):
 
 `wget https://gist.githubusercontent.com/ksimonyan/3785162f95cd2d5fee77/raw/f02f8769e64494bcd3d7e97d5d747ac275825721/VGG_ILSVRC_19_layers_deploy.prototxt`
@@ -30,3 +30,10 @@ Pytorch code and weights to Pytorch model
 
 
 At this point, you will have a few files in your directory. To save some space you can delete everything and keep **Pytorch_VGGFACE_IR.py** and **Pytorch_VGGFACE.pth**
+
+### 2.Libraries
+- face-alignment
+- torch
+- numpy
+- cv2 (opencv-python)
+- matplotlib
