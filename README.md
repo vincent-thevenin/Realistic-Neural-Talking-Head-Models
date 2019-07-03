@@ -1,5 +1,5 @@
 # Realistic-Neural-Talking-Head-Models
-My implementation of Few-Shot Adversarial Learning of Realistic Neural Talking Head Models (Egor Zakharov et al.).
+My implementation of Few-Shot Adversarial Learning of Realistic Neural Talking Head Models (Egor Zakharov et al.). https://arxiv.org/pdf/1905.08233.pdf
 
 ## Prerequisites
 
