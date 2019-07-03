@@ -10,7 +10,7 @@ Follow these instructions to install the VGGFace from the paper (https://arxiv.o
 
 `wget http://www.robots.ox.ac.uk/%7Evgg/software/very_deep/caffe/VGG_ILSVRC_19_layers.caffemodel`
 
-`apt install caffe-cuda`
+`sudo apt install caffe-cuda`
 
 `pip install mmdnn`
 
