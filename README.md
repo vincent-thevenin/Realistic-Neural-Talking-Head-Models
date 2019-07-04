@@ -47,7 +47,7 @@ I followed the architecture guidelines from the paper on top of details provided
 
 The images that are fed from voxceleb2 are resized from 224x224 to 256x256 by using zero-padding. This is done so that spatial dimensions don't get rounded when passing through downsampling layers.
 
-The residuals blocks are from [LARGE SCALE GAN TRAINING FOR HIGH FIDELITY NATURAL IMAGE SYNTHESIS](https://arxiv.org/pdf/1809.11096.pdf)
+The residuals blocks are from [LARGE SCALE GAN TRAINING FOR HIGH FIDELITY NATURAL IMAGE SYNTHESIS](https://arxiv.org/pdf/1809.11096.pdf)(K. S. Andrew Brock, Jeff Donahue.).
 
 **Embedder**
 
@@ -58,7 +58,7 @@ The output from the last residual block is resized to a vector of size 512 via m
 
 The downsampling part of the generator uses the same architecture as the embedder with instance normalization added at each block following the paper.
 
-The same dimension residual part uses 5 blocks. These blocks use adaptive instance normalization. Unlike the [AdaIN paper](https://arxiv.org/pdf/1703.06868.pdf) where the alpha and beta learnable parameters from instance normalisation are replaced with mean and variance of the input style, the adaptative parameters (mean and variance) are taken from psi. With psi = P\*e, P the projection matrix and e the embedding vector calculated by the embedder.
+The same dimension residual part uses 5 blocks. These blocks use adaptive instance normalization. Unlike the [AdaIN paper](https://arxiv.org/pdf/1703.06868.pdf)(Xun Huang et al.) where the alpha and beta learnable parameters from instance normalisation are replaced with mean and variance of the input style, the adaptative parameters (mean and variance) are taken from psi. With psi = P\*e, P the projection matrix and e the embedding vector calculated by the embedder.
 
 (*P is of size 2\*(512\*2\*5 + 512\*2 + 512\*2+ 512+256 + 256+128 + 128+64 + 64+3) x 512 = 17158 x 512*)
 
