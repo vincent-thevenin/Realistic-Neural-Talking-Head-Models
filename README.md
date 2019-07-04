@@ -62,7 +62,7 @@ The same dimension residual part uses 5 blocks. These blocks use adaptive instan
 
 (*P is of size 2\*(512\*2\*5 + 512\*2 + 512\*2+ 512+256 + 256+128 + 128+64 + 64+3) x 512 = 17158 x 512*)
 
-There are then 6 upsampling residual blocks. The final output is a tensor of dimensions 3x224x224. I rescale the image using a sigmoid and multiplying by 255. There are two adaIN layers in each updampling block (they replace the normalisation layers from the Biggan paper).
+There are then 6 upsampling residual blocks. The final output is a tensor of dimensions 3x224x224. I rescale the image using a sigmoid and multiplying by 255. There are two adaIN layers in each upsampling block (they replace the normalisation layers from the Biggan paper).
 
 Self-attention layers are added both in the downsampling part and upsampling part of the generator.
 
