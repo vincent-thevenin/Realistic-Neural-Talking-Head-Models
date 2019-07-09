@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .blocks import ResBlockDown, SelfAttention, ResBlock, ResBlockD, ResBlockUp, Padding
-
+import math
 
 #components
 class Embedder(nn.Module):
