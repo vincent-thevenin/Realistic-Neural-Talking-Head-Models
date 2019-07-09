@@ -5,7 +5,7 @@ from torchvision.models import vgg19
 
 
 class LossCnt(nn.Module):
-    def __init__(self, VGGFace_body_path, VGGFace_weight_path):
+    def __init__(self, VGGFace_body_path, VGGFace_weight_path, device):
         super(LossCnt, self).__init__()
         
         self.VGG19 = vgg19(pretrained=True)
@@ -13,7 +13,7 @@ class LossCnt(nn.Module):
         self.VGG19.to(device)
         
         MainModel = imp.load_source('MainModel', VGGFace_body_path)
-        self.VGGFace = torch.load(VGGFace_weight_path, map_location = cpu)
+        self.VGGFace = torch.load(VGGFace_weight_path, map_location = 'cpu')
         self.VGGFace.eval()
         self.VGGFace.to(device)
 
@@ -122,13 +122,14 @@ class LossAdv(nn.Module):
 
 
 class LossMatch(nn.Module):
-    def __init__(self, match_weight=8e1):
+    def __init__(self, device, match_weight=8e1):
         super(LossMatch, self).__init__()
         self.l1_loss = nn.L1Loss()
         self.match_weight = match_weight
+        self.device = device
         
     def forward(self, e_vectors, W, i):
-        loss = torch.zeros(e_vectors.shape[0],1).to(device)
+        loss = torch.zeros(e_vectors.shape[0],1).to(self.device)
         for b in range(e_vectors.shape[0]):
             for k in range(e_vectors.shape[1]):
                 loss[b] += torch.abs(e_vectors[b,k].squeeze() - W[:,i[b]]).mean()
@@ -141,12 +142,12 @@ class LossG(nn.Module):
     Inputs: x, x_hat, r_hat, D_res_list, D_hat_res_list, e, W, i
     output: lossG
     """
-    def __init__(self, VGGFace_body_path, VGGFace_weight_path, vgg19_weight=1e-2, vggface_weight=2e-3):
+    def __init__(self, VGGFace_body_path, VGGFace_weight_path, device, vgg19_weight=1e-2, vggface_weight=2e-3):
         super(LossG, self).__init__()
         
-        self.LossCnt = LossCnt(VGGFace_body_path, VGGFace_weight_path)
+        self.LossCnt = LossCnt(VGGFace_body_path, VGGFace_weight_path, device)
         self.lossAdv = LossAdv()
-        self.lossMatch = LossMatch()
+        self.lossMatch = LossMatch(device=device)
         
     def forward(self, x, x_hat, r_hat, D_res_list, D_hat_res_list, e_vectors, W, i):
         loss_cnt = self.LossCnt(x, x_hat)
