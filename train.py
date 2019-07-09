@@ -17,8 +17,8 @@ device = torch.device("cuda:0")
 cpu = torch.device("cpu")
 path_to_chkpt = 'model_weights.tar'
 path_to_backup = 'backup_model_weights.tar'
+dataset = VidDataSet(K=8, path_to_mp4 = 'mp4', device=device)
 
-dataset = VidDataSet(K=8, path_to_mp4 = 'mp4')
 dataLoader = DataLoader(dataset, batch_size=2, shuffle=True)
 
 G = Generator(224).to(device)
@@ -35,19 +35,34 @@ optimizerD = optim.Adam(params = D.parameters(), lr=2e-4)
 
 """Criterion"""
 criterionG = LossG(VGGFace_body_path='Pytorch_VGGFACE_IR.py',
-                   VGGFace_weight_path='Pytorch_VGGFACE.pth')
+                   VGGFace_weight_path='Pytorch_VGGFACE.pth', device=device)
 criterionDreal = LossDSCreal()
 criterionDfake = LossDSCfake()
 
 
 """Training init"""
-epochCurrent = 0
+epochCurrent = epoch = i_batch = 0
 lossesG = []
 lossesD = []
 i_batch_current = 0
 
 num_epochs = 750
 
+
+print('Saving latest...')
+torch.save({
+        'epoch': epoch,
+        'lossesG': lossesG,
+        'lossesD': lossesD,
+        'E_state_dict': E.state_dict(),
+        'G_state_dict': G.state_dict(),
+        'D_state_dict': D.state_dict(),
+        'optimizerG_state_dict': optimizerG.state_dict(),
+        'optimizerD_state_dict': optimizerD.state_dict(),
+        'num_vid': dataset.__len__(),
+        'i_batch': i_batch
+        }, path_to_chkpt)
+print('...Done saving latest')
 
 """Loading from past checkpoint, skip if new start"""
 checkpoint = torch.load(path_to_chkpt)
