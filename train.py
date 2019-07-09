@@ -1,12 +1,16 @@
 """Main"""
 import torch
 import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
 from datetime import datetime
 from matplotlib import pyplot as plt
 
-from dataset import *
-from loss import *
-from network import *
+from dataset.dataset_class import VidDataSet
+from dataset.video_extraction_conversion import *
+from loss.loss_discriminator import *
+from loss.loss_generator import *
+from network.blocks import *
+from network.model import *
 
 """Create dataset and net"""
 device = torch.device("cuda:0")
