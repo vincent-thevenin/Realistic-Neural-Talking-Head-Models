@@ -1,4 +1,13 @@
 # Realistic-Neural-Talking-Head-Models
+
+![Fake1](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/1%201.png "Fake 1")
+![Real1](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/1%202.png "Real 1")
+
+![Fake2](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/2%201.png "Fake 2")
+![Real2](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/2%202.png "Real 2")
+
+*Inference after 5 epochs of training on the smaller test dataset*
+
 My implementation of Few-Shot Adversarial Learning of Realistic Neural Talking Head Models (Egor Zakharov et al.). https://arxiv.org/pdf/1905.08233.pdf
 
 ## Prerequisites
