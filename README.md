@@ -8,6 +8,12 @@
 
 *Inference after 5 epochs of training on the smaller test dataset*
 
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=F2vms-eUrYs
+" target="_blank"><img src="http://img.youtube.com/vi/F2vms-eUrYs/0.jpg" 
+alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
+
+
+
 My implementation of Few-Shot Adversarial Learning of Realistic Neural Talking Head Models (Egor Zakharov et al.). https://arxiv.org/pdf/1905.08233.pdf
 
 ## Prerequisites
