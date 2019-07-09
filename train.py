@@ -15,8 +15,8 @@ from network.model import *
 """Create dataset and net"""
 device = torch.device("cuda:0")
 cpu = torch.device("cpu")
-path_to_chkpt = 'gdrive/My Drive/Colab Notebooks/Face_Landmarks/model_weights.tar'
-path_to_backup = 'gdrive/My Drive/Colab Notebooks/Face_Landmarks/backup_model_weights.tar'
+path_to_chkpt = 'model_weights.tar'
+path_to_backup = 'backup_model_weights.tar'
 
 dataset = VidDataSet(K=8, path_to_mp4 = 'mp4')
 dataLoader = DataLoader(dataset, batch_size=2, shuffle=True)
