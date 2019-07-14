@@ -8,7 +8,7 @@ My implementation of Few-Shot Adversarial Learning of Realistic Neural Talking H
 ![Fake2](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/2%201.png "Fake 2")
 ![Real2](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/2%202.png "Real 2")
 
-*Inference after 5 epochs of training on the smaller test dataset, due to a lack of compute ressources I stopped early (author did 75 epochs with finetuning method and 150 with feed-forward method on the full dataset) but the results are somewhat good.*
+*Inference after 5 epochs of training on the smaller test dataset, due to a lack of compute ressources I stopped early (author did 75 epochs with finetuning method and 150 with feed-forward method on the full dataset).*
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=F2vms-eUrYs
 " target="_blank"><img src="http://img.youtube.com/vi/F2vms-eUrYs/0.jpg" 
