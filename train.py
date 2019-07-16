@@ -4,6 +4,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from datetime import datetime
 from matplotlib import pyplot as plt
+import os
 
 from dataset.dataset_class import VidDataSet
 from dataset.video_extraction_conversion import *
@@ -48,23 +49,24 @@ i_batch_current = 0
 
 num_epochs = 750
 
+#initiate checkpoint if inexistant
+if not os.path.isfile(path_to_chkpt):
+  print('Initiating new checkpoint...')
+  torch.save({
+          'epoch': epoch,
+          'lossesG': lossesG,
+          'lossesD': lossesD,
+          'E_state_dict': E.state_dict(),
+          'G_state_dict': G.state_dict(),
+          'D_state_dict': D.state_dict(),
+          'optimizerG_state_dict': optimizerG.state_dict(),
+          'optimizerD_state_dict': optimizerD.state_dict(),
+          'num_vid': dataset.__len__(),
+          'i_batch': i_batch
+          }, path_to_chkpt)
+  print('...Done')
 
-print('Saving latest...')
-torch.save({
-        'epoch': epoch,
-        'lossesG': lossesG,
-        'lossesD': lossesD,
-        'E_state_dict': E.state_dict(),
-        'G_state_dict': G.state_dict(),
-        'D_state_dict': D.state_dict(),
-        'optimizerG_state_dict': optimizerG.state_dict(),
-        'optimizerD_state_dict': optimizerD.state_dict(),
-        'num_vid': dataset.__len__(),
-        'i_batch': i_batch
-        }, path_to_chkpt)
-print('...Done saving latest')
-
-"""Loading from past checkpoint, skip if new start"""
+"""Loading from past checkpoint"""
 checkpoint = torch.load(path_to_chkpt)
 E.load_state_dict(checkpoint['E_state_dict'])
 G.load_state_dict(checkpoint['G_state_dict'])
