@@ -118,8 +118,8 @@ output: x the camera output, g_y the corresponding landmark"""
                 print('Error: Video corrupted or no landmarks visible')
 
     
-    frame_mark = torch.from_numpy(np.array(frame_landmark_list)).type(dtype = torch.float) #K,2,224,224,3
-    frame_mark = frame_mark.transpose(2,4).to(device) #K,2,3,224,224
+    frame_mark = torch.from_numpy(np.array(frame_landmark_list)).type(dtype = torch.float) #K,2,256,256,3
+    frame_mark = frame_mark.transpose(2,4).to(device) #K,2,3,256,256
     
     x = frame_mark[0,0].to(device)
     g_y = frame_mark[0,1].to(device)
