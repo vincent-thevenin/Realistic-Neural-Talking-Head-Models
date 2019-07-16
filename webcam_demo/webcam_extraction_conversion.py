@@ -55,13 +55,14 @@ def crop_and_reshape_img(img, preds, pad, out_shape=256):
     
     return img
 
-"""Input: cap a cv2.VideoCapture object, device the torch.device, 
+
+def generate_landmarks(cap, device, pad):
+    """Input: cap a cv2.VideoCapture object, device the torch.device, 
 pad the distance in pixel from border to face
 
 output: x the camera output, g_y the corresponding landmark"""
-def generate_landmarks(cap, device, pad):
+   
     #Get webcam image
-    
     fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False, device='cuda:0')
     no_pic = True
     
