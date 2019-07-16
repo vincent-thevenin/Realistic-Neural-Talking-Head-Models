@@ -58,6 +58,9 @@ At this point, you will have a few files in your directory. To save some space y
 The VoxCeleb2 dataset has videos in zip format. (Very heavy 270GB for the dev one and 8GB for the test)
 http://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox2.html
 
+### 4.Optional, my pretrained weights
+Available at https://drive.google.com/open?id=1vdFz4sh23hC_KIQGJjwbTfUdPG-aYor8
+
 ## Architecture
 
 I followed the architecture guidelines from the paper on top of details provided by M. Zakharov.
