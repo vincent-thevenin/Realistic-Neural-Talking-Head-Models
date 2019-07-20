@@ -12,14 +12,16 @@ def select_frames(video_path, K):
     #w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     #h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     
-    
-    rand_frames_idx = [0]*n_frames
-    i = 0
-    while(i < K):
-        idx = random.randint(0, n_frames-1)
-        if rand_frames_idx[idx] == 0:
-            rand_frames_idx[idx] = 1
-            i += 1
+    if n_frames <= K: #There are not enough frames in the video
+        rand_frames_idx = [1]*n_frames
+    else:
+        rand_frames_idx = [0]*n_frames
+        i = 0
+        while(i < K):
+            idx = random.randint(0, n_frames-1)
+            if rand_frames_idx[idx] == 0:
+                rand_frames_idx[idx] = 1
+                i += 1
     
     frames_list = []
     
