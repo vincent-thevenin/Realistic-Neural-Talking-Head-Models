@@ -136,9 +136,10 @@ class LossMatch(nn.Module):
             loss[b] = loss[b]/e_vectors.shape[1]
         loss = loss.mean()
         return loss * self.match_weight
-	
+    
 class LossG(nn.Module):
     """
+	Loss for generator meta training
     Inputs: x, x_hat, r_hat, D_res_list, D_hat_res_list, e, W, i
     output: lossG
     """
@@ -153,5 +154,21 @@ class LossG(nn.Module):
         loss_cnt = self.LossCnt(x, x_hat)
         loss_adv = self.lossAdv(r_hat, D_res_list, D_hat_res_list)
         loss_match = self.lossMatch(e_vectors, W, i)
-        #print('cnt:',loss_cnt.item(),'\nadv:',loss_adv.item(),'\nmatch:',loss_match.item())
         return loss_cnt + loss_adv + loss_match
+
+class LossGF(nn.Module):
+    """
+	Loss for generator finetuning
+    Inputs: x, x_hat, r_hat, D_res_list, D_hat_res_list, e, W, i
+    output: lossG
+    """
+    def __init__(self, VGGFace_body_path, VGGFace_weight_path, device, vgg19_weight=1e-2, vggface_weight=2e-3):
+        super(LossGF, self).__init__()
+        
+        self.LossCnt = LossCnt(VGGFace_body_path, VGGFace_weight_path, device)
+        self.lossAdv = LossAdv()
+        
+    def forward(self, x, x_hat, r_hat, D_res_list, D_hat_res_list):
+        loss_cnt = self.LossCnt(x, x_hat)
+        loss_adv = self.lossAdv(r_hat, D_res_list, D_hat_res_list)
+        return loss_cnt + loss_adv
