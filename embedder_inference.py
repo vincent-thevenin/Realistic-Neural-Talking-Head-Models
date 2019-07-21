@@ -19,8 +19,8 @@ cpu = torch.device("cpu")
 path_to_e_hat_video = 'ehat_video.tar'
 path_to_e_hat_images = 'ehat_images.tar'
 path_to_chkpt = 'model_weights.tar'
-path_to_video = 'examples/finetuning/test_video.mp4'
-path_to_images = 'examples/finetuning/test_images'
+path_to_video = 'examples/fine_tuning/test_video.mp4'
+path_to_images = 'examples/fine_tuning/test_images'
 T = 32
 
 
@@ -108,7 +108,7 @@ E.eval()
 
 
 """Loading from past checkpoint"""
-checkpoint = torch.load(path_to_chkpt)
+checkpoint = torch.load(path_to_chkpt, map_location=cpu)
 E.load_state_dict(checkpoint['E_state_dict'])
 
 
