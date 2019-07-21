@@ -50,7 +50,10 @@ def crop_and_reshape_img(img, preds, pad, out_shape=256):
     maxY = int(maxY)
     deltaX = int(deltaX)
     deltaY = int(deltaY)
-    img = img[minY-deltaY-pad:maxY+deltaY+pad, minX-deltaX-pad:maxX+deltaX+pad, :]
+    
+    lowY = max(0,minY-deltaY-pad)
+    lowX = max(0, minX-deltaX-pad)
+    img = img[lowY:maxY+deltaY+pad, lowX:maxX+deltaX+pad, :]
     img = cv2.resize(img, (out_shape,out_shape))
     
     return img
