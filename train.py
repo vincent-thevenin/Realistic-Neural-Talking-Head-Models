@@ -67,7 +67,7 @@ if not os.path.isfile(path_to_chkpt):
   print('...Done')
 
 """Loading from past checkpoint"""
-checkpoint = torch.load(path_to_chkpt)
+checkpoint = torch.load(path_to_chkpt, map_location=cpu)
 E.load_state_dict(checkpoint['E_state_dict'])
 G.load_state_dict(checkpoint['G_state_dict'])
 D.load_state_dict(checkpoint['D_state_dict'])
