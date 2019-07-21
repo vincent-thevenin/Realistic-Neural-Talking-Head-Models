@@ -55,7 +55,7 @@ class FineTuningImagesDataset(Dataset):
     def __len__(self):
         return len(os.listdir(self.path_to_images))
     
-    def __getitem__(self):
+    def __getitem__(self, idx):
         frame_mark_images = select_images_frames(self.path_to_images)
         random_idx = torch.randint(low = 0, high = len(frame_mark_images), size = (1,1))
         frame_mark_images = [frame_mark_images[random_idx]]
@@ -77,7 +77,7 @@ class FineTuningVideoDataset(Dataset):
     def __len__(self):
         return 1
     
-    def __getitem__(self):
+    def __getitem__(self, idx):
         path = self.path_to_video
         frame_has_face = False
         while not frame_has_face:
