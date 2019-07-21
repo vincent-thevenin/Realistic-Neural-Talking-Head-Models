@@ -8,7 +8,7 @@ from network.model import Embedder
 import numpy as np
 
 
-"""Create dataset and net"""
+"""Hyperparameters and config"""
 device = torch.device("cuda:0")
 cpu = torch.device("cpu")
 path_to_e_hat_video = 'e_hat_video.tar'
@@ -21,7 +21,6 @@ T = 32
 
 
 """Loading Embedder input"""
-
 frame_mark_video = select_frames(path_to_video , T)
 frame_mark_video = generate_cropped_landmarks(frame_mark_video, pad=50)
 frame_mark_video = torch.from_numpy(np.array(frame_mark_video)).type(dtype = torch.float) #T,2,256,256,3
