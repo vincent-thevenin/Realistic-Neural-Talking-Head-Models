@@ -4,6 +4,9 @@ import face_alignment
 from matplotlib import pyplot as plt
 import numpy as np
 
+from webcam_demo.webcam_extraction_conversion import crop_and_reshape_preds, crop_and_reshape_img
+
+
 def select_frames(video_path, K):
     cap = cv2.VideoCapture(video_path)
     
@@ -49,6 +52,57 @@ def generate_landmarks(frames_list):
         try:
             input = frames_list[i]
             preds = fa.get_landmarks(input)[0]
+
+            dpi = 100
+            fig = plt.figure(figsize=(input.shape[1]/dpi, input.shape[0]/dpi), dpi = dpi)
+            ax = fig.add_subplot(1,1,1)
+            ax.imshow(np.ones(input.shape))
+            plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+            #chin
+            ax.plot(preds[0:17,0],preds[0:17,1],marker='',markersize=5,linestyle='-',color='green',lw=2)
+            #left and right eyebrow
+            ax.plot(preds[17:22,0],preds[17:22,1],marker='',markersize=5,linestyle='-',color='orange',lw=2)
+            ax.plot(preds[22:27,0],preds[22:27,1],marker='',markersize=5,linestyle='-',color='orange',lw=2)
+            #nose
+            ax.plot(preds[27:31,0],preds[27:31,1],marker='',markersize=5,linestyle='-',color='blue',lw=2)
+            ax.plot(preds[31:36,0],preds[31:36,1],marker='',markersize=5,linestyle='-',color='blue',lw=2)
+            #left and right eye
+            ax.plot(preds[36:42,0],preds[36:42,1],marker='',markersize=5,linestyle='-',color='red',lw=2)
+            ax.plot(preds[42:48,0],preds[42:48,1],marker='',markersize=5,linestyle='-',color='red',lw=2)
+            #outer and inner lip
+            ax.plot(preds[48:60,0],preds[48:60,1],marker='',markersize=5,linestyle='-',color='purple',lw=2)
+            ax.plot(preds[60:68,0],preds[60:68,1],marker='',markersize=5,linestyle='-',color='pink',lw=2) 
+            ax.axis('off')
+
+            fig.canvas.draw()
+
+            data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+            data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+
+            frame_landmark_list.append((input, data))
+            plt.close(fig)
+        except:
+            print('Error: Video corrupted or no landmarks visible')
+    
+    for i in range(len(frames_list) - len(frame_landmark_list)):
+        #filling frame_landmark_list in case of error
+        frame_landmark_list.append(frame_landmark_list[i])
+    
+    
+    return frame_landmark_list
+
+def generate_cropped_landmarks(frames_list, pad=50):
+    frame_landmark_list = []
+    fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False, device ='cuda:0')
+    
+    for i in range(len(frames_list)):
+        try:
+            input = frames_list[i]
+            preds = fa.get_landmarks(input)[0]
+            
+            input = crop_and_reshape_img(input, preds, pad=pad)
+            preds = crop_and_reshape_preds(preds, pad=pad)
 
             dpi = 100
             fig = plt.figure(figsize=(input.shape[1]/dpi, input.shape[0]/dpi), dpi = dpi)
