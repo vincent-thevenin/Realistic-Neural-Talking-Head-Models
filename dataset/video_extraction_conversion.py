@@ -3,6 +3,7 @@ import random
 import face_alignment
 from matplotlib import pyplot as plt
 import numpy as np
+import os
 
 from webcam_demo.webcam_extraction_conversion import crop_and_reshape_preds, crop_and_reshape_img
 
@@ -91,6 +92,15 @@ def generate_landmarks(frames_list):
     
     
     return frame_landmark_list
+
+
+def select_images_frames(path_to_images):
+    images_list = []
+    for image_name in os.listdir(path_to_images):
+        img = cv2.imread(os.path.join(path_to_images, image_name))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        images_list.append(img)
+    return images_list
 
 def generate_cropped_landmarks(frames_list, pad=50):
     frame_landmark_list = []

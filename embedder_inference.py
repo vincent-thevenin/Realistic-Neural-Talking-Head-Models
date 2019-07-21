@@ -1,9 +1,7 @@
 """Main"""
 import torch
-import os
-import cv2
 
-from dataset.video_extraction_conversion import select_frames, generate_cropped_landmarks
+from dataset.video_extraction_conversion import select_frames, select_images_frames, generate_cropped_landmarks
 from network.blocks import *
 from network.model import Embedder
 
@@ -20,14 +18,6 @@ path_to_video = 'examples/fine_tuning/test_video.mp4'
 path_to_images = 'examples/fine_tuning/test_images'
 T = 32
 
-
-def select_images_frames(path_to_images):
-    images_list = []
-    for image_name in os.listdir(path_to_images):
-        img = cv2.imread(os.path.join(path_to_images, image_name))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        images_list.append(img)
-    return images_list
 
 
 """Loading Embedder input"""
