@@ -2,18 +2,26 @@ import torch
 import torch.nn as nn
 import imp
 from torchvision.models import vgg19
+from network.model import Cropped_VGG19
 
 
 class LossCnt(nn.Module):
     def __init__(self, VGGFace_body_path, VGGFace_weight_path, device):
         super(LossCnt, self).__init__()
         
-        self.VGG19 = vgg19(pretrained=True)
+        full_VGG19 = vgg19(pretrained=True)
+        cropped_VGG19 = Cropped_VGG19()
+        cropped_VGG19.load_state_dict(full_VGG19.state_dict(), strict = False)
+        self.VGG19 = cropped_VGG19
         self.VGG19.eval()
         self.VGG19.to(device)
         
+        
         MainModel = imp.load_source('MainModel', VGGFace_body_path)
-        self.VGGFace = torch.load(VGGFace_weight_path, map_location = 'cpu')
+        full_VGGFace = torch.load(VGGFace_weight_path, map_location = 'cpu')
+        cropped_VGGFace = Cropped_VGG19()
+        cropped_VGGFace.load_state_dict(full_VGGFace.state_dict(), strict = False)
+        self.VGGFace = cropped_VGGFace
         self.VGGFace.eval()
         self.VGGFace.to(device)
 
@@ -139,7 +147,7 @@ class LossMatch(nn.Module):
     
 class LossG(nn.Module):
     """
-	Loss for generator meta training
+    Loss for generator meta training
     Inputs: x, x_hat, r_hat, D_res_list, D_hat_res_list, e, W, i
     output: lossG
     """
@@ -158,7 +166,7 @@ class LossG(nn.Module):
 
 class LossGF(nn.Module):
     """
-	Loss for generator finetuning
+    Loss for generator finetuning
     Inputs: x, x_hat, r_hat, D_res_list, D_hat_res_list, e, W, i
     output: lossG
     """

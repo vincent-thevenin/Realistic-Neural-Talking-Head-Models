@@ -246,3 +246,38 @@ class Discriminator(nn.Module):
             out = torch.bmm(out.transpose(1,2), (self.W_i[:,i].unsqueeze(-1)).transpose(0,1) + self.w_0) + self.b #1x1
         
         return out, [out1 , out2, out3, out4, out5, out6, out7]
+
+class Cropped_VGG19(nn.Module):
+    def __init__(self):
+        super(Cropped_VGG19, self).__init__()
+        
+        self.conv1_1 = nn.Conv2d(3,64,3)
+        self.conv1_2 = nn.Conv2d(64,64,3)
+        self.conv2_1 = nn.Conv2d(64,128,3)
+        self.conv2_2 = nn.Conv2d(128,128,3)
+        self.conv3_1 = nn.Conv2d(128,256,3)
+        self.conv3_2 = nn.Conv2d(256,256,3)
+        self.conv3_3 = nn.Conv2d(256,256,3)
+        self.conv4_1 = nn.Conv2d(256,512,3)
+        self.conv4_2 = nn.Conv2d(512,512,3)
+        self.conv4_3 = nn.Conv2d(512,512,3)
+        self.conv5_1 = nn.Conv2d(512,512,3)
+        self.conv5_2 = nn.Conv2d(512,512,3)
+        self.conv5_3 = nn.Conv2d(512,512,3)
+        
+    def forward(self, x):
+        out = self.conv1_1(x)
+        out = self.conv1_2(out)
+        out = self.conv2_1(out)
+        out = self.conv2_2(out)
+        out = self.conv3_1(out)
+        out = self.conv3_2(out)
+        out = self.conv3_3(out)
+        out = self.conv4_1(out)
+        out = self.conv4_2(out)
+        out = self.conv4_3(out)
+        out = self.conv5_1(out)
+        out = self.conv5_2(out)
+        out = self.conv5_3(out)
+        
+        return out
