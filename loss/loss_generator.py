@@ -9,14 +9,11 @@ class LossCnt(nn.Module):
     def __init__(self, VGGFace_body_path, VGGFace_weight_path, device):
         super(LossCnt, self).__init__()
         
-        full_VGG19 = vgg19(pretrained=True)
-        cropped_VGG19 = Cropped_VGG19()
-        cropped_VGG19.load_state_dict(full_VGG19.state_dict(), strict = False)
-        self.VGG19 = cropped_VGG19
+        self.VGG19 = vgg19(pretrained=True)
         self.VGG19.eval()
         self.VGG19.to(device)
         
-        
+		
         MainModel = imp.load_source('MainModel', VGGFace_body_path)
         full_VGGFace = torch.load(VGGFace_weight_path, map_location = 'cpu')
         cropped_VGGFace = Cropped_VGG19()
