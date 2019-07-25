@@ -81,12 +81,12 @@ class FineTuningVideoDataset(Dataset):
         path = self.path_to_video
         frame_has_face = False
         while not frame_has_face:
-            #try:
-            frame_mark = select_frames(path , 1)
-            frame_mark = generate_cropped_landmarks(frame_mark, pad=50)
-            frame_has_face = True
-            #except:
-            #    print('No face detected, retrying')
+            try:
+	            frame_mark = select_frames(path , 1)
+	            frame_mark = generate_cropped_landmarks(frame_mark, pad=50)
+	            frame_has_face = True
+            except:
+                print('No face detected, retrying')
         frame_mark = torch.from_numpy(np.array(frame_mark)).type(dtype = torch.float) #1,2,256,256,3
         frame_mark = frame_mark.transpose(2,4).to(self.device) #1,2,3,256,256
         
