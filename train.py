@@ -122,6 +122,7 @@ for epoch in range(epochCurrent, num_epochs):
             
             
             #train D again
+            optimizerG.zero_grad()
             optimizerD.zero_grad()
             x_hat.detach_()
             r_hat, D_hat_res_list = D(x_hat, g_y, i)
