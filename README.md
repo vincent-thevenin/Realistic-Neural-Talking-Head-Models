@@ -24,15 +24,15 @@ alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
 Follow these instructions to install the VGGFace from the paper (https://arxiv.org/pdf/1703.07332.pdf):
 
 ```
-$ wget https://gist.githubusercontent.com/ksimonyan/3785162f95cd2d5fee77/raw/f02f8769e64494bcd3d7e97d5d747ac275825721/VGG_ILSVRC_19_layers_deploy.prototxt
-$ wget http://www.robots.ox.ac.uk/%7Evgg/software/very_deep/caffe/VGG_ILSVRC_19_layers.caffemodel
+$ wget http://www.robots.ox.ac.uk/~vgg/software/vgg_face/src/vgg_face_caffe.tar.gz
+$ tar xvzf vgg_face_caffe.tar.gz
 $ sudo apt install caffe-cuda
 $ pip install mmdnn
 ```
 
 Convert Caffe to IR (Intermediate Representation)
 
-`$ mmtoir -f caffe -n VGG_ILSVRC_19_layers_deploy.prototxt -w VGG_ILSVRC_19_layers.caffemodel -o VGGFACE_IR`
+`$ mmtoir -f caffe -n vgg_face_caffe/VGG_FACE_deploy.prototxt -w vgg_face_caffe/VGG_FACE.caffemodel -o VGGFACE_IR`
 
 **If you have a problem with pickle, delete your numpy and reinstall numpy with version 1.16.1**
 
