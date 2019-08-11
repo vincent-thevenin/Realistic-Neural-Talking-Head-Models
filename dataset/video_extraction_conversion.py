@@ -137,7 +137,7 @@ def generate_cropped_landmarks(frames_list, pad=50):
             ax.axis('off')
 
             fig.canvas.draw()
-
+    
             data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
             data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
 

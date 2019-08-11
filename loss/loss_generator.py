@@ -27,9 +27,9 @@ class LossCnt(nn.Module):
 
         #define hook
         def vgg_x_hook(module, input, output):
-            vgg_x_features.append(output.data)
+            vgg_x_features.append(output)
         def vgg_xhat_hook(module, input, output):
-            vgg_xhat_features.append(output.data)
+            vgg_xhat_features.append(output)
 
         """same as above for vggface"""
         vgg_x_features = []
