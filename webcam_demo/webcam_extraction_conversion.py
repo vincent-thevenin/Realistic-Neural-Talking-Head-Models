@@ -26,14 +26,25 @@ def get_borders(preds):
 def crop_and_reshape_preds(preds, pad, out_shape=256):
     minX, maxX, minY, maxY = get_borders(preds)
     
-    maxDelta = max(maxX - minX, maxY - minY)
+    delta = max(maxX - minX, maxY - minY)
+    deltaX = (delta - (maxX - minX))/2
+    deltaY = (delta - (maxY - minY))/2
+    
+    deltaX = int(deltaX)
+    deltaY = int(deltaY)
+    
+    
+    #crop
+    for i in range(len(preds)):
+        preds[i][0] = max(0, preds[i][0] - minX + deltaX + pad)
+        preds[i][1] = max(0, preds[i][1] - minY + deltaY + pad)
     
     #find reshape factor
-    r = out_shape/(maxDelta+2*pad)
+    r = out_shape/(delta + 2*pad)
         
     for i in range(len(preds)):
-        preds[i,0] = r*(preds[i,0] - minX + (maxDelta-(maxX - minX))/2 + pad)
-        preds[i,1] = r*(preds[i,1] - minY + (maxDelta-(maxY - minY))/2 + pad)
+        preds[i,0] = int(r*preds[i,0])
+        preds[i,1] = int(r*preds[i,1])
     return preds
 
 def crop_and_reshape_img(img, preds, pad, out_shape=256):
