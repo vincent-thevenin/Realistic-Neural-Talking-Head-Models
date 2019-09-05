@@ -191,6 +191,7 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         
         self.relu = nn.ReLU(inplace=False)
+        self.tanh = nn.Tanh()
         
         #in 6*224*224
         self.pad = Padding(224) #out 6*256*256
@@ -245,6 +246,8 @@ class Discriminator(nn.Module):
             out = torch.bmm(out.transpose(1,2), (self.w_prime.unsqueeze(0).expand(out.shape[0],512,1))) + self.b
         else:
             out = torch.bmm(out.transpose(1,2), (self.W_i[:,i].unsqueeze(-1)).transpose(0,1) + self.w_0) + self.b #1x1
+        
+        out = 2 * self.tanh(out)
         
         return out, [out1 , out2, out3, out4, out5, out6, out7]
 
@@ -309,4 +312,4 @@ class Cropped_VGG19(nn.Module):
         conv5_1         = self.conv5_1(conv5_1_pad)
         
         return [conv1_1, conv2_1, conv3_1, conv4_1, conv5_1]
-	
+    
