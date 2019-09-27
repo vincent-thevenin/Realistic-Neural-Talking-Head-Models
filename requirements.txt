@@ -1,0 +1,5 @@
+face-alignment==1.0.0
+matplotlib==3.1.1
+numpy==1.16.4
+opencv-python==4.1.0.25
+torch==1.2.0
