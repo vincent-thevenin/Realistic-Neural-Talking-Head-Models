@@ -125,18 +125,14 @@ class ResBlockD(nn.Module):
         
         #left
         self.conv1 = nn.utils.spectral_norm(nn.Conv2d(in_channel, in_channel, 3, padding = 1))
-        self.in1 = nn.InstanceNorm2d(in_channel, affine=True)
         self.conv2 = nn.utils.spectral_norm(nn.Conv2d(in_channel, in_channel, 3, padding = 1))
-        self.in2 = nn.InstanceNorm2d(in_channel, affine=True)
         
     def forward(self, x):
         res = x
         
         out = self.conv1(x)
-        out = self.in1(out)
         out = self.relu(out)
         out = self.conv2(out)
-        out = self.in2(out)
         
         out = out + res
         
