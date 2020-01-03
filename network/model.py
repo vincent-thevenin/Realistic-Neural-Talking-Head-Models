@@ -10,7 +10,7 @@ class Embedder(nn.Module):
     def __init__(self, in_height):
         super(Embedder, self).__init__()
         
-        self.relu = nn.ReLU(inplace=False)
+        self.relu = nn.ReLU(inplace=True)
         
         #in 6*224*224
         self.pad = Padding(in_height) #out 6*256*256
@@ -25,22 +25,22 @@ class Embedder(nn.Module):
 
     def forward(self, x, y):
         
-        out1 = torch.cat((x,y),dim = -3) #out 6*224*224
-        out2 = self.pad(out1) #out 6*256*256
-        out3 = self.resDown1(out2) #out 64*128*128
-        out4 = self.resDown2(out3) #out 128*64*64
-        out5 = self.resDown3(out4) #out 256*32*32
+        out = torch.cat((x,y),dim = -3) #out 6*224*224
+        out = self.pad(out) #out 6*256*256
+        out = self.resDown1(out) #out 64*128*128
+        out = self.resDown2(out) #out 128*64*64
+        out = self.resDown3(out) #out 256*32*32
         
-        out6 = self.self_att(out5) #out 256*32*32
+        out = self.self_att(out) #out 256*32*32
         
-        out7 = self.resDown4(out6) #out 512*16*16
-        out8 = self.resDown5(out7) #out 512*8*8
-        out9 = self.resDown6(out8) #out 512*4*4
+        out = self.resDown4(out) #out 512*16*16
+        out = self.resDown5(out) #out 512*8*8
+        out = self.resDown6(out) #out 512*4*4
         
-        out10 = self.sum_pooling(out9) #out 512*1*1
-        out11 = self.relu(out10) #out 512*1*1
-        out12 = out11.view(-1,512,1) #out B*512*1
-        return out12
+        out = self.sum_pooling(out) #out 512*1*1
+        out = self.relu(out) #out 512*1*1
+        out = out.view(-1,512,1) #out B*512*1
+        return out
 
 class Generator(nn.Module):
     P_LEN = 2*(512*2*5 + 512*2 + 512*2+ 512+256 + 256+128 + 128+64 + 64+3)
@@ -62,7 +62,6 @@ class Generator(nn.Module):
     def __init__(self, in_height, finetuning=False, e_finetuning=None):
         super(Generator, self).__init__()
         
-        self.relu = nn.ReLU(inplace=False)
         self.sigmoid = nn.Sigmoid()
         
         #in 3*224*224 for voxceleb2
@@ -189,8 +188,6 @@ class Generator(nn.Module):
 class Discriminator(nn.Module):
     def __init__(self, num_videos, finetuning=False, e_finetuning=None):
         super(Discriminator, self).__init__()
-        
-        self.relu = nn.ReLU(inplace=False)
         
         #in 6*224*224
         self.pad = Padding(224) #out 6*256*256
