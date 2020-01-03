@@ -117,7 +117,7 @@ class LossMatch(nn.Module):
         loss = torch.zeros(e_vectors.shape[0],1).to(self.device)
         for b in range(e_vectors.shape[0]):
             for k in range(e_vectors.shape[1]):
-                loss[b] += torch.abs(e_vectors[b,k].squeeze() - W[:,i[b]]).mean()
+                loss[b] += torch.abs(e_vectors[b,k].squeeze() - W[:,b]).mean()
             loss[b] = loss[b]/e_vectors.shape[1]
         loss = loss.mean()
         return loss * self.match_weight

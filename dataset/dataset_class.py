@@ -39,8 +39,8 @@ class VidDataSet(Dataset):
         frame_mark = select_frames(path , self.K)
         frame_mark = generate_landmarks(frame_mark)
         frame_mark = torch.from_numpy(np.array(frame_mark)).type(dtype = torch.float) #K,2,224,224,3
-        frame_mark = frame_mark.transpose(2,4).to(self.device) #K,2,3,224,224
-        
+        frame_mark = frame_mark.transpose(2,4).to(self.device)/255 #K,2,3,224,224
+
         g_idx = torch.randint(low = 0, high = self.K, size = (1,1))
         x = frame_mark[g_idx,0].squeeze()
         g_y = frame_mark[g_idx,1].squeeze()

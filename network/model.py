@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from .blocks import ResBlockDown, SelfAttention, ResBlock, ResBlockD, ResBlockUp, Padding
 import math
 import sys
+import os
 
 #components
 class Embedder(nn.Module):
@@ -180,7 +181,7 @@ class Generator(nn.Module):
         out = self.resUp6(out, e_psi[:, self.slice_idx[10]:self.slice_idx[11], :])
         out = self.sigmoid(out)
         
-        out = out*255
+        #out = out*255
         
         #out 3*224*224
         return out
@@ -201,7 +202,18 @@ class Discriminator(nn.Module):
         self.res = ResBlockD(512) #out 512*4*4
         self.sum_pooling = nn.AdaptiveAvgPool2d((1,1)) #out 512*1*1
         
-        self.W_i = nn.Parameter(torch.rand(512, num_videos))
+        if not finetuning:
+            print('Initializing Discriminator weights')
+            if not os.path.isdir('Wi_weights'):
+                os.mkdir('Wi_weights')
+            for i in range(num_videos):
+                if i%(num_videos//100 +1) == 0:
+                    print(int(i*100/num_videos),'%')
+                if not os.path.isfile('Wi_weights/W_'+str(i)+'/W_'+str(i)+'.tar'):
+                    w_i = torch.rand(512, 1)
+                    os.mkdir('Wi_weights/W_'+str(i))
+                    torch.save({'W_i': w_i}, 'Wi_weights/W_'+str(i)+'/W_'+str(i)+'.tar')
+        self.W_i = nn.Parameter(torch.rand(512, 1))
         self.w_0 = nn.Parameter(torch.randn(512,1))
         self.b = nn.Parameter(torch.randn(1))
         
@@ -241,7 +253,7 @@ class Discriminator(nn.Module):
         if self.finetuning:
             out = torch.bmm(out.transpose(1,2), (self.w_prime.unsqueeze(0).expand(out.shape[0],512,1))) + self.b
         else:
-            out = torch.bmm(out.transpose(1,2), (self.W_i[:,i].unsqueeze(-1)).transpose(0,1) + self.w_0) + self.b #1x1
+            out = torch.bmm(out.transpose(1,2), (self.W_i.unsqueeze(-1)).transpose(0,1) + self.w_0) + self.b #1x1
         
         return out, [out1 , out2, out3, out4, out5, out6, out7]
 

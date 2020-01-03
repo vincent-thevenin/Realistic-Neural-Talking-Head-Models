@@ -1,8 +1,11 @@
 """Main"""
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from datetime import datetime
+import matplotlib
+matplotlib.use('agg')
 from matplotlib import pyplot as plt
 import os
 
@@ -30,9 +33,6 @@ G.train()
 E.train()
 D.train()
 
-optimizerG = optim.Adam(params = list(E.parameters()) + list(G.parameters()), lr=5e-5)
-optimizerD = optim.Adam(params = D.parameters(), lr=2e-4)
-
 
 """Criterion"""
 criterionG = LossG(VGGFace_body_path='Pytorch_VGGFACE_IR.py',
@@ -47,7 +47,7 @@ lossesG = []
 lossesD = []
 i_batch_current = 0
 
-num_epochs = 750
+num_epochs = 75
 
 #initiate checkpoint if inexistant
 if not os.path.isfile(path_to_chkpt):
@@ -59,8 +59,6 @@ if not os.path.isfile(path_to_chkpt):
           'E_state_dict': E.state_dict(),
           'G_state_dict': G.state_dict(),
           'D_state_dict': D.state_dict(),
-          'optimizerG_state_dict': optimizerG.state_dict(),
-          'optimizerD_state_dict': optimizerD.state_dict(),
           'num_vid': dataset.__len__(),
           'i_batch': i_batch
           }, path_to_chkpt)
@@ -71,8 +69,6 @@ checkpoint = torch.load(path_to_chkpt, map_location=cpu)
 E.load_state_dict(checkpoint['E_state_dict'])
 G.load_state_dict(checkpoint['G_state_dict'])
 D.load_state_dict(checkpoint['D_state_dict'])
-optimizerG.load_state_dict(checkpoint['optimizerG_state_dict'])
-optimizerD.load_state_dict(checkpoint['optimizerD_state_dict'])
 epochCurrent = checkpoint['epoch']
 lossesG = checkpoint['lossesG']
 lossesD = checkpoint['lossesD']
@@ -83,6 +79,8 @@ G.train()
 E.train()
 D.train()
 
+optimizerG = optim.Adam(params = list(E.parameters()) + list(G.parameters()), lr=5e-5)
+optimizerD = optim.Adam(params = D.parameters(), lr=2e-4)
 
 """Training"""
 batch_start = datetime.now()
@@ -92,11 +90,16 @@ for epoch in range(epochCurrent, num_epochs):
         if i_batch > len(dataLoader):
             i_batch_current = 0
             break
+        
+        W_i = torch.load('Wi_weights/W_'+str(i[0].item())+'/W_'+str(i[0].item())+'.tar', map_location=device)['W_i']
+        for idx in i[1:]:
+            W_i = torch.cat((W_i, torch.load('Wi_weights/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar', map_location=device)['W_i']),dim=1)
+        D.W_i = nn.Parameter(W_i.detach())
         with torch.autograd.enable_grad():
             #zero the parameter gradients
             optimizerG.zero_grad()
             optimizerD.zero_grad()
-
+            
             #forward
             # Calculate average encoding vector for video
             f_lm_compact = f_lm.view(-1, f_lm.shape[-4], f_lm.shape[-3], f_lm.shape[-2], f_lm.shape[-1]) #BxK,2,3,224,224
@@ -135,7 +138,9 @@ for epoch in range(epochCurrent, num_epochs):
             lossD.backward(retain_graph=False)
             optimizerD.step()
 
-
+        for enum, idx in enumerate(i):
+            torch.save({'W_i': D.W_i[:,enum].unsqueeze(-1)}, 'Wi_weights/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar')
+        
         # Output training stats
         if i_batch % 10 == 0:
             batch_end = datetime.now()
@@ -149,25 +154,25 @@ for epoch in range(epochCurrent, num_epochs):
                      lossD.item(), lossG.item(), r.mean(), r_hat.mean()))
 
             plt.clf()
-            out = x_hat.transpose(1,3)[0]
+            out = (x_hat[0]*255).transpose(0,2)
             for img_no in range(1,x_hat.shape[0]):
-                out = torch.cat((out, x_hat.transpose(1,3)[img_no]), dim = 1)
+                out = torch.cat((out, (x_hat[img_no]*255).transpose(0,2)), dim = 1)
             out = out.type(torch.int32).to(cpu).numpy()
             plt.imshow(out)
             plt.show()
 
             plt.clf()
-            out = x.transpose(1,3)[0]
+            out = (x[0]*255).transpose(0,2)
             for img_no in range(1,x.shape[0]):
-                out = torch.cat((out, x.transpose(1,3)[img_no]), dim = 1)
+                out = torch.cat((out, (x[img_no]*255).transpose(0,2)), dim = 1)
             out = out.type(torch.int32).to(cpu).numpy()
             plt.imshow(out)
             plt.show()
 
             plt.clf()
-            out = g_y.transpose(1,3)[0]
+            out = (g_y[0]*255).transpose(0,2)
             for img_no in range(1,g_y.shape[0]):
-                out = torch.cat((out, g_y.transpose(1,3)[img_no]), dim = 1)
+                out = torch.cat((out, (g_y[img_no]*255).transpose(0,2)), dim = 1)
             out = out.type(torch.int32).to(cpu).numpy()
             plt.imshow(out)
             plt.show()
@@ -189,8 +194,6 @@ for epoch in range(epochCurrent, num_epochs):
                     'E_state_dict': E.state_dict(),
                     'G_state_dict': G.state_dict(),
                     'D_state_dict': D.state_dict(),
-                    'optimizerG_state_dict': optimizerG.state_dict(),
-                    'optimizerD_state_dict': optimizerD.state_dict(),
                     'num_vid': dataset.__len__(),
                     'i_batch': i_batch
                     }, path_to_chkpt)
@@ -206,8 +209,6 @@ for epoch in range(epochCurrent, num_epochs):
                     'E_state_dict': E.state_dict(),
                     'G_state_dict': G.state_dict(),
                     'D_state_dict': D.state_dict(),
-                    'optimizerG_state_dict': optimizerG.state_dict(),
-                    'optimizerD_state_dict': optimizerD.state_dict(),
                     'num_vid': dataset.__len__(),
                     'i_batch': i_batch
                     }, path_to_backup)
