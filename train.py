@@ -1,5 +1,6 @@
 """Main"""
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from datetime import datetime
@@ -30,9 +31,6 @@ G.train()
 E.train()
 D.train()
 
-optimizerG = optim.Adam(params = list(E.parameters()) + list(G.parameters()), lr=5e-5)
-optimizerD = optim.Adam(params = D.parameters(), lr=2e-4)
-
 
 """Criterion"""
 criterionG = LossG(VGGFace_body_path='Pytorch_VGGFACE_IR.py',
@@ -59,8 +57,6 @@ if not os.path.isfile(path_to_chkpt):
           'E_state_dict': E.state_dict(),
           'G_state_dict': G.state_dict(),
           'D_state_dict': D.state_dict(),
-          'optimizerG_state_dict': optimizerG.state_dict(),
-          'optimizerD_state_dict': optimizerD.state_dict(),
           'num_vid': dataset.__len__(),
           'i_batch': i_batch
           }, path_to_chkpt)
@@ -71,8 +67,6 @@ checkpoint = torch.load(path_to_chkpt, map_location=cpu)
 E.load_state_dict(checkpoint['E_state_dict'])
 G.load_state_dict(checkpoint['G_state_dict'])
 D.load_state_dict(checkpoint['D_state_dict'])
-optimizerG.load_state_dict(checkpoint['optimizerG_state_dict'])
-optimizerD.load_state_dict(checkpoint['optimizerD_state_dict'])
 epochCurrent = checkpoint['epoch']
 lossesG = checkpoint['lossesG']
 lossesD = checkpoint['lossesD']
@@ -83,6 +77,8 @@ G.train()
 E.train()
 D.train()
 
+optimizerG = optim.Adam(params = list(E.parameters()) + list(G.parameters()), lr=5e-5)
+optimizerD = optim.Adam(params = D.parameters(), lr=2e-4)
 
 """Training"""
 batch_start = datetime.now()
@@ -92,11 +88,16 @@ for epoch in range(epochCurrent, num_epochs):
         if i_batch > len(dataLoader):
             i_batch_current = 0
             break
+        
+        W_i = torch.load('Wi_weights/W_'+str(i[0].item())+'/W_'+str(i[0].item())+'.tar', map_location=device)['W_i']
+        for idx in i[1:]:
+            W_i = torch.cat((W_i, torch.load('Wi_weights/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar', map_location=device)['W_i']),dim=1)
+        D.W_i = nn.Parameter(W_i.detach())
         with torch.autograd.enable_grad():
             #zero the parameter gradients
             optimizerG.zero_grad()
             optimizerD.zero_grad()
-
+            
             #forward
             # Calculate average encoding vector for video
             f_lm_compact = f_lm.view(-1, f_lm.shape[-4], f_lm.shape[-3], f_lm.shape[-2], f_lm.shape[-1]) #BxK,2,3,224,224
@@ -135,7 +136,9 @@ for epoch in range(epochCurrent, num_epochs):
             lossD.backward(retain_graph=False)
             optimizerD.step()
 
-
+        for enum, idx in enumerate(i):
+            torch.save({'W_i': D.W_i[:,enum].unsqueeze(-1)}, 'Wi_weights/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar')
+        
         # Output training stats
         if i_batch % 10 == 0:
             batch_end = datetime.now()
@@ -189,8 +192,6 @@ for epoch in range(epochCurrent, num_epochs):
                     'E_state_dict': E.state_dict(),
                     'G_state_dict': G.state_dict(),
                     'D_state_dict': D.state_dict(),
-                    'optimizerG_state_dict': optimizerG.state_dict(),
-                    'optimizerD_state_dict': optimizerD.state_dict(),
                     'num_vid': dataset.__len__(),
                     'i_batch': i_batch
                     }, path_to_chkpt)
@@ -206,8 +207,6 @@ for epoch in range(epochCurrent, num_epochs):
                     'E_state_dict': E.state_dict(),
                     'G_state_dict': G.state_dict(),
                     'D_state_dict': D.state_dict(),
-                    'optimizerG_state_dict': optimizerG.state_dict(),
-                    'optimizerD_state_dict': optimizerD.state_dict(),
                     'num_vid': dataset.__len__(),
                     'i_batch': i_batch
                     }, path_to_backup)
