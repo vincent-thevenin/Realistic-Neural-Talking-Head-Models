@@ -1,0 +1,8 @@
+
+dataset/__pycache__/
+
+.spyproject/
+
+network/__pycache__/
+
+webcam_demo/__pycache__/
