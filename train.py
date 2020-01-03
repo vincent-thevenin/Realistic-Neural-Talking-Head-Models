@@ -149,25 +149,25 @@ for epoch in range(epochCurrent, num_epochs):
                      lossD.item(), lossG.item(), r.mean(), r_hat.mean()))
 
             plt.clf()
-            out = x_hat.transpose(1,3)[0]
+            out = (x_hat[0]*255).transpose(0,2)
             for img_no in range(1,x_hat.shape[0]):
-                out = torch.cat((out, x_hat.transpose(1,3)[img_no]), dim = 1)
+                out = torch.cat((out, (x_hat[img_no]*255).transpose(0,2)), dim = 1)
             out = out.type(torch.int32).to(cpu).numpy()
             plt.imshow(out)
             plt.show()
 
             plt.clf()
-            out = x.transpose(1,3)[0]
+            out = (x[0]*255).transpose(0,2)
             for img_no in range(1,x.shape[0]):
-                out = torch.cat((out, x.transpose(1,3)[img_no]), dim = 1)
+                out = torch.cat((out, (x[img_no]*255).transpose(0,2)), dim = 1)
             out = out.type(torch.int32).to(cpu).numpy()
             plt.imshow(out)
             plt.show()
 
             plt.clf()
-            out = g_y.transpose(1,3)[0]
+            out = (g_y[0]*255).transpose(0,2)
             for img_no in range(1,g_y.shape[0]):
-                out = torch.cat((out, g_y.transpose(1,3)[img_no]), dim = 1)
+                out = torch.cat((out, (g_y[img_no]*255).transpose(0,2)), dim = 1)
             out = out.type(torch.int32).to(cpu).numpy()
             plt.imshow(out)
             plt.show()

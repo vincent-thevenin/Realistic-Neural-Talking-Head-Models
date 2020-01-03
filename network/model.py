@@ -181,7 +181,7 @@ class Generator(nn.Module):
         out = self.resUp6(out, e_psi[:, self.slice_idx[10]:self.slice_idx[11], :])
         out = self.sigmoid(out)
         
-        out = out*255
+        #out = out*255
         
         #out 3*224*224
         return out
