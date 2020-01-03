@@ -6,6 +6,7 @@ class ResBlockDown(nn.Module):
         super(ResBlockDown, self).__init__()
         
         self.relu = nn.ReLU(inplace = False)
+        self.relu_inplace = nn.ReLU(inplace = True)
         self.avg_pool2d = nn.AvgPool2d(2)
         
         #left
@@ -25,7 +26,7 @@ class ResBlockDown(nn.Module):
         #right
         out = self.relu(x)
         out = self.conv_r1(out)
-        out = self.relu(out)
+        out = self.relu_inplace(out)
         out = self.conv_r2(out)
         out = self.avg_pool2d(out)
         
@@ -93,7 +94,7 @@ class ResBlock(nn.Module):
         #using no ReLU method
         
         #general
-        self.relu = nn.ReLU(inplace = False)
+        self.relu = nn.ReLU(inplace = True)
         
         #left
         self.conv1 = nn.utils.spectral_norm(nn.Conv2d(in_channel, in_channel, 3, padding = 1))
@@ -121,7 +122,7 @@ class ResBlockD(nn.Module):
         #using no ReLU method
         
         #general
-        self.relu = nn.ReLU(inplace = False)
+        self.relu = nn.ReLU(inplace = True)
         
         #left
         self.conv1 = nn.utils.spectral_norm(nn.Conv2d(in_channel, in_channel, 3, padding = 1))
@@ -147,7 +148,7 @@ class ResBlockUp(nn.Module):
         self.out_channel = out_channel
         
         self.upsample = nn.Upsample(size = out_size, scale_factor=scale)
-        self.relu = nn.ReLU(inplace = False)
+        self.relu = nn.ReLU(inplace = True)
         
         #left
         self.conv_l1 = nn.utils.spectral_norm(nn.Conv2d(in_channel, out_channel, 1))
