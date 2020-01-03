@@ -4,6 +4,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from datetime import datetime
+import matplotlib
+matplotlib.use('agg')
 from matplotlib import pyplot as plt
 import os
 
@@ -45,7 +47,7 @@ lossesG = []
 lossesD = []
 i_batch_current = 0
 
-num_epochs = 750
+num_epochs = 75
 
 #initiate checkpoint if inexistant
 if not os.path.isfile(path_to_chkpt):
