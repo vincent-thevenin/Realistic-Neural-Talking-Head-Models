@@ -90,10 +90,17 @@ for epoch in range(epochCurrent, num_epochs):
         if i_batch > len(dataLoader):
             i_batch_current = 0
             break
+        try:
+            W_i = torch.load('Wi_weights/W_'+str(i[0].item())+'/W_'+str(i[0].item())+'.tar', map_location=device)['W_i']
+        except:
+            W_i = torch.rand((512,1))
         
-        W_i = torch.load('Wi_weights/W_'+str(i[0].item())+'/W_'+str(i[0].item())+'.tar', map_location=device)['W_i']
         for idx in i[1:]:
-            W_i = torch.cat((W_i, torch.load('Wi_weights/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar', map_location=device)['W_i']),dim=1)
+            try:
+                W_i = torch.cat((W_i, torch.load('Wi_weights/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar', map_location=device)['W_i']),dim=1)
+            except:
+                W_i = torch.cat((W_i, torch.rand((512,1))), dim=1)
+        
         D.W_i = nn.Parameter(W_i.detach())
         with torch.autograd.enable_grad():
             #zero the parameter gradients
