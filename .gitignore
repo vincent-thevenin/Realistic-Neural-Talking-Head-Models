@@ -6,3 +6,13 @@ dataset/__pycache__/
 network/__pycache__/
 
 webcam_demo/__pycache__/
+
+__pycache__/
+
+mp4/
+
+*.tar
+
+Pytorch_VGGFACE.pth
+
+Pytorch_VGGFACE_IR.py
