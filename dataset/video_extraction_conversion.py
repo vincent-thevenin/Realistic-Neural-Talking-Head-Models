@@ -45,9 +45,9 @@ def select_frames(video_path, K):
     
     return frames_list
 
-def generate_landmarks(frames_list):
+def generate_landmarks(frames_list, face_aligner):
     frame_landmark_list = []
-    fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False, device ='cuda:0')
+    fa = face_aligner
     
     for i in range(len(frames_list)):
         try:
@@ -102,9 +102,9 @@ def select_images_frames(path_to_images):
         images_list.append(img)
     return images_list
 
-def generate_cropped_landmarks(frames_list, pad=50):
+def generate_cropped_landmarks(frames_list, face_aligner, pad=50):
     frame_landmark_list = []
-    fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False, device ='cuda:0')
+    fa = face_aligner
     
     for i in range(len(frames_list)):
         try:
