@@ -44,19 +44,17 @@ class Embedder(nn.Module):
         return out
 
 class Generator(nn.Module):
-    P_LEN = 2*(512*2*5 + 512*2 + 512*2+ 512+256 + 256+128 + 128+64 + 64+3)
+    P_LEN = 2*(512*2*5 + 512+256 + 256+128 + 128+64 + 64+3)
     slice_idx = [0,
                 512*4, #res1
                 512*4, #res2
                 512*4, #res3
                 512*4, #res4
                 512*4, #res5
-                512*4, #resUp1
-                512*4, #resUp2
-                512*2 + 256*2, #resUp3
-                256*2 + 128*2, #resUp4
-                128*2 + 64*2, #resUp5
-                64*2 + 3*2] #resUp6
+                512*2 + 256*2, #resUp1
+                256*2 + 128*2, #resUp2
+                128*2 + 64*2, #resUp3
+                64*2 + 3*2] #resUp4
     for i in range(1, len(slice_idx)):
         slice_idx[i] = slice_idx[i-1] + slice_idx[i]
     
@@ -83,32 +81,24 @@ class Generator(nn.Module):
         self.resDown4 = ResBlockDown(256, 512) #out 512*16*16
         self.in4 = nn.InstanceNorm2d(512, affine=True)
         
-        self.resDown5 = ResBlockDown(512, 512) #out 512*8*8
-        self.in5 = nn.InstanceNorm2d(512, affine=True)
-        
-        self.resDown6 = ResBlockDown(512, 512) #out 512*4*4
-        self.in6 = nn.InstanceNorm2d(512, affine=True)
-        
         #Res
-        #in 512*4*4
+        #in 512*16*16
         self.res1 = ResBlock(512)
         self.res2 = ResBlock(512)
         self.res3 = ResBlock(512)
         self.res4 = ResBlock(512)
         self.res5 = ResBlock(512)
-        #out 512*4*4
+        #out 512*16*16
         
         #Up
-        #in 512*4*4
-        self.resUp1 = ResBlockUp(512, 512) #out 512*8*8
-        self.resUp2 = ResBlockUp(512, 512) #out 512*16*16
-        self.resUp3 = ResBlockUp(512, 256) #out 256*32*32
-        self.resUp4 = ResBlockUp(256, 128) #out 128*64*64
+        #in 512*16*16
+        self.resUp1 = ResBlockUp(512, 256) #out 256*32*32
+        self.resUp2 = ResBlockUp(256, 128) #out 128*64*64
         
         self.self_att_Up = SelfAttention(128) #out 128*64*64
-        
-        self.resUp5 = ResBlockUp(128, 64)  #out 64*128*128
-        self.resUp6 = ResBlockUp(64, 3, out_size=(in_height, in_height), scale=None, conv_size=9, padding_size=4) #out 3*224*224
+
+        self.resUp3 = ResBlockUp(128, 64) #out 64*128*128
+        self.resUp4 = ResBlockUp(64, 3, out_size=(in_height, in_height), scale=None, conv_size=9, padding_size=4) #out 3*224*224
         
         self.p = nn.Parameter(torch.rand(self.P_LEN,512).normal_(0.0,0.02))
         
@@ -150,12 +140,6 @@ class Generator(nn.Module):
         out = self.resDown4(out)
         out = self.in4(out)
         
-        out = self.resDown5(out)
-        out = self.in5(out)
-        
-        out = self.resDown6(out)
-        out = self.in6(out)
-        
         
         #Residual
         out = self.res1(out, e_psi[:, self.slice_idx[0]:self.slice_idx[1], :])
@@ -170,15 +154,13 @@ class Generator(nn.Module):
         
         out = self.resUp2(out, e_psi[:, self.slice_idx[6]:self.slice_idx[7], :])
         
+        out = self.self_att_Up(out)
+
         out = self.resUp3(out, e_psi[:, self.slice_idx[7]:self.slice_idx[8], :])
         
         out = self.resUp4(out, e_psi[:, self.slice_idx[8]:self.slice_idx[9], :])
         
-        out = self.self_att_Up(out)
         
-        out = self.resUp5(out, e_psi[:, self.slice_idx[9]:self.slice_idx[10], :])
-        
-        out = self.resUp6(out, e_psi[:, self.slice_idx[10]:self.slice_idx[11], :])
         out = self.sigmoid(out)
         
         #out = out*255
@@ -213,7 +195,7 @@ class Discriminator(nn.Module):
                     w_i = torch.rand(512, 1)
                     os.mkdir('Wi_weights/W_'+str(i))
                     torch.save({'W_i': w_i}, 'Wi_weights/W_'+str(i)+'/W_'+str(i)+'.tar')
-        self.W_i = nn.Parameter(torch.rand(512, 1))
+        self.W_i = nn.Parameter(torch.rand(512, 2))
         self.w_0 = nn.Parameter(torch.randn(512,1))
         self.b = nn.Parameter(torch.randn(1))
         
