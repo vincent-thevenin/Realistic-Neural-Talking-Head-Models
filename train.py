@@ -9,7 +9,7 @@ matplotlib.use('agg')
 from matplotlib import pyplot as plt
 import os
 
-from dataset.dataset_class import VidDataSet
+from dataset.dataset_class import PreprocessDataset
 from dataset.video_extraction_conversion import *
 from loss.loss_discriminator import *
 from loss.loss_generator import *
@@ -21,7 +21,7 @@ device = torch.device("cuda:0")
 cpu = torch.device("cpu")
 path_to_chkpt = 'model_weights.tar'
 path_to_backup = 'backup_model_weights.tar'
-dataset = VidDataSet(K=8, path_to_mp4 = 'mp4', device=device)
+dataset = PreprocessDataset(K=8, path_to_preprocess = '/mnt/ACA21355A21322FE/VoxCeleb/saves', device=device)
 
 dataLoader = DataLoader(dataset, batch_size=2, shuffle=True)
 
