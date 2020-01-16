@@ -53,28 +53,33 @@ class PreprocessDataset(Dataset):
         self.K = K
         self.path_to_preprocess = path_to_preprocess
         
+        self.person_id_list = os.listdir(self.path_to_preprocess)
     def __len__(self):
         vid_num = 0
-        for person_id in os.listdir(self.path_to_preprocess):
-            for video_id in os.listdir(os.path.join(self.path_to_preprocess, person_id)):
-                if len(os.listdir(os.path.join(self.path_to_preprocess, person_id, video_id))) == 2*self.K:
-                    vid_num += 1
+        for person_id in self.person_id_list:
+            # for video_id in os.listdir(os.path.join(self.path_to_preprocess, person_id)):
+            #     if len(os.listdir(os.path.join(self.path_to_preprocess, person_id, video_id))) == 2*self.K:
+            #         vid_num += 1
+            vid_num += len(os.listdir(os.path.join(self.path_to_preprocess, person_id)))
         return vid_num
     
     def __getitem__(self, idx):
         vid_idx = idx
         if idx<0:
             idx = self.__len__() + idx
-        for person_id in os.listdir(self.path_to_preprocess):
-            for video_id in os.listdir(os.path.join(self.path_to_preprocess, person_id)):
-                if len(os.listdir(os.path.join(self.path_to_preprocess, person_id, video_id))) == 2*self.K:
-                    if idx != 0:
-                        idx -= 1
-                    else:
-                        break
-            if idx == 0:
-                break
-        path = os.path.join(self.path_to_preprocess, person_id, video_id)
+        # for person_id in self.person_id_list:
+        #     for video_id in os.listdir(os.path.join(self.path_to_preprocess, person_id)):
+        #         path = os.path.join(self.path_to_preprocess, person_id, video_id)
+        #         if len(os.listdir(path)) == 2*self.K:
+        #             if idx != 0:
+        #                 idx -= 1
+        #             else:
+        #                 break
+        #     if idx == 0:
+        #         break
+        path = os.path.join(self.path_to_preprocess,
+                            str(idx//256),
+                            str(idx)+".jpg")
         frame_mark = select_preprocess_frames(path)
         frame_mark = torch.from_numpy(np.array(frame_mark)).type(dtype = torch.float) #K,2,224,224,3
         frame_mark = frame_mark.transpose(2,4)/255 #K,2,3,224,224
@@ -82,7 +87,13 @@ class PreprocessDataset(Dataset):
         g_idx = torch.randint(low = 0, high = self.K, size = (1,1))
         x = frame_mark[g_idx,0].squeeze()
         g_y = frame_mark[g_idx,1].squeeze()
-        return frame_mark, x, g_y, vid_idx
+        
+        try:
+            W_i = torch.load('Wi_weights/W_'+str(vid_idx)+'/W_'+str(vid_idx)+'.tar')['W_i']
+        except:
+            W_i = torch.rand((512,1))
+                
+        return frame_mark, x, g_y, vid_idx, W_i
 
 class FineTuningImagesDataset(Dataset):
     def __init__(self, path_to_images, device):
