@@ -38,8 +38,8 @@ with torch.no_grad():
     while True:
         x, g_y = generate_landmarks(cap=cap, device=device, pad=50)
 
-        g_y = g_y.unsqueeze(0)
-        x = x.unsqueeze(0)
+        g_y = g_y.unsqueeze(0)/255
+        x = x.unsqueeze(0)/255
 
 
         #forward
@@ -50,7 +50,7 @@ with torch.no_grad():
         x_hat = G(g_y, e_hat)
 
         plt.clf()
-        out1 = x_hat.transpose(1,3)[0]/255
+        out1 = x_hat.transpose(1,3)[0]
         #for img_no in range(1,x_hat.shape[0]):
         #    out1 = torch.cat((out1, x_hat.transpose(1,3)[img_no]), dim = 1)
         out1 = out1.to(cpu).numpy()
@@ -58,7 +58,7 @@ with torch.no_grad():
         #plt.show()
         
         #plt.clf()
-        out2 = x.transpose(1,3)[0]/255
+        out2 = x.transpose(1,3)[0]
         #for img_no in range(1,x.shape[0]):
         #    out2 = torch.cat((out2, x.transpose(1,3)[img_no]), dim = 1)
         out2 = out2.to(cpu).numpy()
@@ -66,7 +66,7 @@ with torch.no_grad():
         #plt.show()
 
         #plt.clf()
-        out3 = g_y.transpose(1,3)[0]/255
+        out3 = g_y.transpose(1,3)[0]
         #for img_no in range(1,g_y.shape[0]):
         #    out3 = torch.cat((out3, g_y.transpose(1,3)[img_no]), dim = 1)
         out3 = out3.to(cpu).numpy()
