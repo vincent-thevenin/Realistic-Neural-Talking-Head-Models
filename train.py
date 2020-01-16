@@ -4,9 +4,10 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from datetime import datetime
-import matplotlib
-matplotlib.use('agg')
+#import matplotlib
+#matplotlib.use('agg')
 from matplotlib import pyplot as plt
+plt.ion()
 import os
 
 from dataset.dataset_class import PreprocessDataset
@@ -15,6 +16,7 @@ from loss.loss_discriminator import *
 from loss.loss_generator import *
 from network.blocks import *
 from network.model import *
+from tqdm import tqdm
 
 """Create dataset and net"""
 device = torch.device("cuda:0")
@@ -88,14 +90,11 @@ optimizerD = optim.Adam(params = D.parameters(), lr=2e-4)
 batch_start = datetime.now()
 
 for epoch in range(epochCurrent, num_epochs):
-    for i_batch, (f_lm, x, g_y, i) in enumerate(dataLoader, start=i_batch_current):
-        if i_batch > len(dataLoader):
-            i_batch_current = 0
-            break
-        try:
-            W_i = torch.load('Wi_weights/W_'+str(i[0].item())+'/W_'+str(i[0].item())+'.tar', map_location=device)['W_i']
-        except:
-            W_i = torch.rand((512,1))
+    if epoch > epochCurrent:
+        i_batch_current = 0
+    pbar = tqdm(dataLoader, leave=True, initial=i_batch_current)
+    pbar.set_postfix(epoch=epoch)
+    for i_batch, (f_lm, x, g_y, i, W_i) in enumerate(pbar, start=i_batch_current):
         
         f_lm = f_lm.to(device)
         x = x.to(device)
@@ -152,40 +151,45 @@ for epoch in range(epochCurrent, num_epochs):
         # Output training stats
         if i_batch % 10 == 0:
             batch_end = datetime.now()
-            avg_time = (batch_end - batch_start) / 10
-            print('\n\navg batch time for batch size of', x.shape[0],':',avg_time)
+            avg_time = (batch_end - batch_start) / 100
+            # print('\n\navg batch time for batch size of', x.shape[0],':',avg_time)
             
             batch_start = datetime.now()
             
-            print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(y)): %.4f'
-                  % (epoch, num_epochs, i_batch, len(dataLoader),
-                     lossD.item(), lossG.item(), r.mean(), r_hat.mean()))
+            # print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(y)): %.4f'
+            #       % (epoch, num_epochs, i_batch, len(dataLoader),
+            #          lossD.item(), lossG.item(), r.mean(), r_hat.mean()))
 
             plt.clf()
             out = (x_hat[0]*255).transpose(0,2)
             for img_no in range(1,x_hat.shape[0]):
                 out = torch.cat((out, (x_hat[img_no]*255).transpose(0,2)), dim = 1)
             out = out.type(torch.int32).to(cpu).numpy()
-            plt.imshow(out)
-            plt.show()
+            fig = out
 
             plt.clf()
             out = (x[0]*255).transpose(0,2)
             for img_no in range(1,x.shape[0]):
                 out = torch.cat((out, (x[img_no]*255).transpose(0,2)), dim = 1)
             out = out.type(torch.int32).to(cpu).numpy()
-            plt.imshow(out)
-            plt.show()
+            fig = np.concatenate((fig, out), 0)
 
             plt.clf()
             out = (g_y[0]*255).transpose(0,2)
             for img_no in range(1,g_y.shape[0]):
                 out = torch.cat((out, (g_y[img_no]*255).transpose(0,2)), dim = 1)
             out = out.type(torch.int32).to(cpu).numpy()
-            plt.imshow(out)
-            plt.show()
+            
+            fig = np.concatenate((fig, out), 0)
+            plt.imshow(fig)
+            plt.xticks([])
+            plt.yticks([])
+            plt.draw()
+            plt.pause(0.001)
+            
+            
 
-        if i_batch % 100 == 99:
+        if i_batch % 1000 == 999:
             lossesD.append(lossD.item())
             lossesG.append(lossG.item())
 
@@ -207,7 +211,7 @@ for epoch in range(epochCurrent, num_epochs):
                     }, path_to_chkpt)
             print('...Done saving latest')
         
-        if i_batch % 500 == 499:
+        if i_batch % 5000 == 4999:
 
             print('Saving latest...')
             torch.save({
