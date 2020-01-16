@@ -21,9 +21,11 @@ device = torch.device("cuda:0")
 cpu = torch.device("cpu")
 path_to_chkpt = 'model_weights.tar'
 path_to_backup = 'backup_model_weights.tar'
-dataset = PreprocessDataset(K=8, path_to_preprocess = '/mnt/ACA21355A21322FE/VoxCeleb/saves', device=device)
+K = 8
+batch_size = 2
+dataset = PreprocessDataset(K=K, path_to_preprocess = '/mnt/ACA21355A21322FE/VoxCeleb/saves2')
 
-dataLoader = DataLoader(dataset, batch_size=2, shuffle=True)
+dataLoader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=32, pin_memory=True)
 
 G = Generator(224).to(device)
 E = Embedder(224).to(device)
@@ -95,11 +97,10 @@ for epoch in range(epochCurrent, num_epochs):
         except:
             W_i = torch.rand((512,1))
         
-        for idx in i[1:]:
-            try:
-                W_i = torch.cat((W_i, torch.load('Wi_weights/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar', map_location=device)['W_i']),dim=1)
-            except:
-                W_i = torch.cat((W_i, torch.rand((512,1))), dim=1)
+        f_lm = f_lm.to(device)
+        x = x.to(device)
+        g_y = g_y.to(device)
+        W_i = W_i.squeeze(-1).transpose(0,1).to(device)
         
         D.W_i = nn.Parameter(W_i.detach())
         with torch.autograd.enable_grad():

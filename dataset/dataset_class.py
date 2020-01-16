@@ -49,10 +49,10 @@ class VidDataSet(Dataset):
         return frame_mark, x, g_y, vid_idx
 
 class PreprocessDataset(Dataset):
-    def __init__(self, K, path_to_preprocess, device):
+    def __init__(self, K, path_to_preprocess):
         self.K = K
         self.path_to_preprocess = path_to_preprocess
-        self.device = device
+        
     def __len__(self):
         vid_num = 0
         for person_id in os.listdir(self.path_to_preprocess):
@@ -77,7 +77,7 @@ class PreprocessDataset(Dataset):
         path = os.path.join(self.path_to_preprocess, person_id, video_id)
         frame_mark = select_preprocess_frames(path)
         frame_mark = torch.from_numpy(np.array(frame_mark)).type(dtype = torch.float) #K,2,224,224,3
-        frame_mark = frame_mark.transpose(2,4).to(self.device)/255 #K,2,3,224,224
+        frame_mark = frame_mark.transpose(2,4)/255 #K,2,3,224,224
 
         g_idx = torch.randint(low = 0, high = self.K, size = (1,1))
         x = frame_mark[g_idx,0].squeeze()
