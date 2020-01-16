@@ -18,20 +18,18 @@ from network.blocks import *
 from network.model import *
 from tqdm import tqdm
 
+from params.params import K, path_to_chkpt, path_to_backup, path_to_Wi, batch_size, path_to_preprocess, frame_shape
+
 """Create dataset and net"""
 device = torch.device("cuda:0")
 cpu = torch.device("cpu")
-path_to_chkpt = 'model_weights.tar'
-path_to_backup = 'backup_model_weights.tar'
-K = 8
-batch_size = 2
-dataset = PreprocessDataset(K=K, path_to_preprocess = '/mnt/ACA21355A21322FE/VoxCeleb/saves2')
+dataset = PreprocessDataset(K=K, path_to_preprocess=path_to_preprocess, path_to_Wi=path_to_Wi)
 
-dataLoader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=32, pin_memory=True)
+dataLoader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
 
-G = Generator(224).to(device)
-E = Embedder(224).to(device)
-D = Discriminator(dataset.__len__()).to(device)
+G = Generator(frame_shape).to(device)
+E = Embedder(frame_shape).to(device)
+D = Discriminator(dataset.__len__(), path_to_Wi).to(device)
 
 G.train()
 E.train()
@@ -88,11 +86,12 @@ optimizerD = optim.Adam(params = D.parameters(), lr=2e-4)
 
 """Training"""
 batch_start = datetime.now()
+pbar = tqdm(dataLoader, leave=True, initial=i_batch_current)
 
 for epoch in range(epochCurrent, num_epochs):
     if epoch > epochCurrent:
         i_batch_current = 0
-    pbar = tqdm(dataLoader, leave=True, initial=i_batch_current)
+        pbar = tqdm(dataLoader, leave=True, initial=i_batch_current)
     pbar.set_postfix(epoch=epoch)
     for i_batch, (f_lm, x, g_y, i, W_i) in enumerate(pbar, start=i_batch_current):
         
@@ -146,8 +145,9 @@ for epoch in range(epochCurrent, num_epochs):
             optimizerD.step()
 
         for enum, idx in enumerate(i):
-            torch.save({'W_i': D.W_i[:,enum].unsqueeze(-1)}, 'Wi_weights/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar')
-        
+            torch.save({'W_i': D.W_i[:,enum].unsqueeze(-1)}, path_to_Wi+'/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar')
+                    
+
         # Output training stats
         if i_batch % 10 == 0:
             batch_end = datetime.now()
@@ -159,6 +159,7 @@ for epoch in range(epochCurrent, num_epochs):
             # print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(y)): %.4f'
             #       % (epoch, num_epochs, i_batch, len(dataLoader),
             #          lossD.item(), lossG.item(), r.mean(), r_hat.mean()))
+            pbar.set_postfix(epoch=epoch, lossD=lossD.item(), lossG=lossG.item(), r=r.mean().item(), r_hat=r_hat.mean().item())
 
             plt.clf()
             out = (x_hat[0]*255).transpose(0,2)
@@ -189,7 +190,8 @@ for epoch in range(epochCurrent, num_epochs):
             
             
 
-        if i_batch % 1000 == 999:
+        # if i_batch % 1000 == 999:
+        if i_batch%70 == 69:
             lossesD.append(lossD.item())
             lossesG.append(lossG.item())
 

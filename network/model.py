@@ -169,8 +169,9 @@ class Generator(nn.Module):
         return out
         
 class Discriminator(nn.Module):
-    def __init__(self, num_videos, finetuning=False, e_finetuning=None):
+    def __init__(self, num_videos, path_to_Wi, finetuning=False, e_finetuning=None):
         super(Discriminator, self).__init__()
+        self.path_to_Wi = path_to_Wi
         
         #in 6*224*224
         self.pad = Padding(224) #out 6*256*256
@@ -186,16 +187,16 @@ class Discriminator(nn.Module):
         
         if not finetuning:
             print('Initializing Discriminator weights')
-            if not os.path.isdir('Wi_weights'):
-                os.mkdir('Wi_weights')
+            if not os.path.isdir(self.path_to_Wi):
+                os.mkdir(self.path_to_Wi)
             for i in range(num_videos):
                 if i%(num_videos//100 +1) == 0:
                     print(int(i*100/num_videos),'%')
-                if not os.path.isfile('Wi_weights/W_'+str(i)+'/W_'+str(i)+'.tar'):
+                if not os.path.isfile(self.path_to_Wi+'/W_'+str(i)+'/W_'+str(i)+'.tar'):
                     w_i = torch.rand(512, 1)
-                    os.mkdir('Wi_weights/W_'+str(i))
-                    torch.save({'W_i': w_i}, 'Wi_weights/W_'+str(i)+'/W_'+str(i)+'.tar')
-        self.W_i = nn.Parameter(torch.rand(512, 2))
+                    os.mkdir(self.path_to_Wi+'/W_'+str(i))
+                    torch.save({'W_i': w_i}, self.path_to_Wi+'/W_'+str(i)+'/W_'+str(i)+'.tar')
+        self.W_i = nn.Parameter(torch.rand(512, 1))
         self.w_0 = nn.Parameter(torch.randn(512,1))
         self.b = nn.Parameter(torch.randn(1))
         

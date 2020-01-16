@@ -49,9 +49,10 @@ class VidDataSet(Dataset):
         return frame_mark, x, g_y, vid_idx
 
 class PreprocessDataset(Dataset):
-    def __init__(self, K, path_to_preprocess):
+    def __init__(self, K, path_to_preprocess, path_to_Wi):
         self.K = K
         self.path_to_preprocess = path_to_preprocess
+        self.path_to_Wi = path_to_Wi
         
         self.person_id_list = os.listdir(self.path_to_preprocess)
     def __len__(self):
@@ -89,7 +90,7 @@ class PreprocessDataset(Dataset):
         g_y = frame_mark[g_idx,1].squeeze()
         
         try:
-            W_i = torch.load('Wi_weights/W_'+str(vid_idx)+'/W_'+str(vid_idx)+'.tar')['W_i']
+            W_i = torch.load(self.path_to_Wi+'/W_'+str(vid_idx)+'/W_'+str(vid_idx)+'.tar')['W_i']
         except:
             W_i = torch.rand((512,1))
                 
