@@ -45,22 +45,32 @@ def select_frames(video_path, K):
     
     return frames_list
 
+# def select_preprocess_frames(frames_path):
+#     images_list = []
+#     landmark_list = []
+#     listdir = sorted(os.listdir(frames_path))
+#     n = len(listdir)
+#     for i, image_name in enumerate(listdir):
+#         if i < n//2: #get the video frames first
+#             img = cv2.imread(os.path.join(frames_path, image_name))
+#             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#             images_list.append(img)
+#         else: #get the landmarks
+#             img = cv2.imread(os.path.join(frames_path, image_name))
+#             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#             landmark_list.append(img)
+    
+#     return [image_frame_tuple for image_frame_tuple in zip(images_list, landmark_list)]
+    
 def select_preprocess_frames(frames_path):
-    images_list = []
-    landmark_list = []
-    listdir = sorted(os.listdir(frames_path))
-    n = len(listdir)
-    for i, image_name in enumerate(listdir):
-        if i < n//2: #get the video frames first
-            img = cv2.imread(os.path.join(frames_path, image_name))
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            images_list.append(img)
-        else: #get the landmarks
-            img = cv2.imread(os.path.join(frames_path, image_name))
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            landmark_list.append(img)
+    img = cv2.imread(frames_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    images_list =  [img[:, i*224:(i+1)*224, :] for i in range(8)]
+    landmark_list = [img[:, i*224:(i+1)*224, :] for i in range(8,16)]
     
     return [image_frame_tuple for image_frame_tuple in zip(images_list, landmark_list)]
+    
 
 def generate_landmarks(frames_list, face_aligner):
     frame_landmark_list = []
