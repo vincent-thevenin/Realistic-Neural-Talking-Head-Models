@@ -4,6 +4,7 @@ import torch
 from dataset.video_extraction_conversion import select_frames, select_images_frames, generate_cropped_landmarks
 from network.blocks import *
 from network.model import Embedder
+import face_alignment
 
 import numpy as np
 
@@ -17,20 +18,20 @@ path_to_chkpt = 'model_weights.tar'
 path_to_video = 'examples/fine_tuning/test_video.mp4'
 path_to_images = 'examples/fine_tuning/test_images'
 T = 32
-
+face_aligner = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False, device ='cuda:0')
 
 
 """Loading Embedder input"""
 frame_mark_video = select_frames(path_to_video , T)
-frame_mark_video = generate_cropped_landmarks(frame_mark_video, pad=50)
+frame_mark_video = generate_cropped_landmarks(frame_mark_video, pad=50, face_aligner=face_aligner)
 frame_mark_video = torch.from_numpy(np.array(frame_mark_video)).type(dtype = torch.float) #T,2,256,256,3
-frame_mark_video = frame_mark_video.transpose(2,4).to(device) #T,2,3,256,256
+frame_mark_video = frame_mark_video.transpose(2,4).to(device)/255 #T,2,3,256,256
 f_lm_video = frame_mark_video.unsqueeze(0) #1,T,2,3,256,256
 
 frame_mark_images = select_images_frames(path_to_images)
-frame_mark_images = generate_cropped_landmarks(frame_mark_images, pad=50)
+frame_mark_images = generate_cropped_landmarks(frame_mark_images, pad=50, face_aligner=face_aligner)
 frame_mark_images = torch.from_numpy(np.array(frame_mark_images)).type(dtype = torch.float) #T,2,256,256,3
-frame_mark_images = frame_mark_images.transpose(2,4).to(device) #T,2,3,256,256
+frame_mark_images = frame_mark_images.transpose(2,4).to(device)/255 #T,2,3,256,256
 f_lm_images = frame_mark_images.unsqueeze(0) #1,T,2,3,256,256
 
 
