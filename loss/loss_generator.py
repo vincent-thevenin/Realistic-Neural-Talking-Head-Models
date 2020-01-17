@@ -23,8 +23,10 @@ class LossCnt(nn.Module):
         self.VGGFace.eval()
         self.VGGFace.to(device)
 
+        self.l1_loss = nn.L1Loss()
+        self.conv_idx_list = [2,7,12,21,30] #idxes of conv layers in VGG19 cf.paper
+
     def forward(self, x, x_hat, vgg19_weight=1e-2, vggface_weight=2e-3):
-        l1_loss = nn.L1Loss()
 
         """Retrieve vggface feature maps"""
         with torch.no_grad(): #no need for gradient compute
@@ -34,7 +36,7 @@ class LossCnt(nn.Module):
 
         lossface = 0
         for x_feat, xhat_feat in zip(vgg_x_features, vgg_xhat_features):
-            lossface += l1_loss(x_feat, xhat_feat)
+            lossface += self.l1_loss(x_feat, xhat_feat)
 
 
         """Retrieve vggface feature maps"""
@@ -50,42 +52,55 @@ class LossCnt(nn.Module):
 
         vgg_x_handles = []
         
-        conv_idx_list = [2,7,12,21,30] #idxes of conv layers in VGG19 cf.paper
         conv_idx_iter = 0
         
         
         #place hooks
         for i,m in enumerate(self.VGG19.features.modules()):
-            if i == conv_idx_list[conv_idx_iter]:
-                if conv_idx_iter < len(conv_idx_list)-1:
+            if i == self.conv_idx_list[conv_idx_iter]:
+                if conv_idx_iter < len(self.conv_idx_list)-1:
                     conv_idx_iter += 1
                 vgg_x_handles.append(m.register_forward_hook(vgg_x_hook))
 
         #run model for x
-        self.VGG19(x)
+        with torch.no_grad():
+            self.VGG19(x)
 
         #retrieve features for x
         for h in vgg_x_handles:
             h.remove()
 
-        #retrieve features for x_hat
+        # #retrieve features for x_hat
+        # conv_idx_iter = 0
+        # for i,m in enumerate(self.VGG19.modules()):
+        #     if i <= 30: #30 is last conv layer
+        #         if type(m) is not torch.nn.Sequential and type(m) is not torchvision.models.vgg.VGG:
+        #         #only pass through nn.module layers
+        #             if i == conv_idx_list[conv_idx_iter]:
+        #                 if conv_idx_iter < len(conv_idx_list)-1:
+        #                     conv_idx_iter += 1
+        #                 x_hat = m(x_hat)
+        #                 vgg_xhat_features.append(x_hat)
+        #                 x_hat.detach_() #reset gradient from output of conv layer
+        #             else:
+        #                 x_hat = m(x_hat)
+        vgg_xhat_handles = []
         conv_idx_iter = 0
-        for i,m in enumerate(self.VGG19.modules()):
-            if i <= 30: #30 is last conv layer
-                if type(m) is not torch.nn.Sequential and type(m) is not torchvision.models.vgg.VGG:
-                #only pass through nn.module layers
-                    if i == conv_idx_list[conv_idx_iter]:
-                        if conv_idx_iter < len(conv_idx_list)-1:
-                            conv_idx_iter += 1
-                        x_hat = m(x_hat)
-                        vgg_xhat_features.append(x_hat)
-                        x_hat.detach_() #reset gradient from output of conv layer
-                    else:
-                        x_hat = m(x_hat)
+        
+        #place hooks
+        for i,m in enumerate(self.VGG19.features.modules()):
+            if i == self.conv_idx_list[conv_idx_iter]:
+                if conv_idx_iter < len(self.conv_idx_list)-1:
+                    conv_idx_iter += 1
+                vgg_xhat_handles.append(m.register_forward_hook(vgg_xhat_hook))
+        self.VGG19(x_hat)
+        #retrieve features for x
+        for h in vgg_xhat_handles:
+            h.remove()
         
         loss19 = 0
         for x_feat, xhat_feat in zip(vgg_x_features, vgg_xhat_features):
-            loss19 += l1_loss(x_feat, xhat_feat)
+            loss19 += self.l1_loss(x_feat, xhat_feat)
 
         loss = vgg19_weight * loss19 + vggface_weight * lossface
 
@@ -114,13 +129,15 @@ class LossMatch(nn.Module):
         self.device = device
         
     def forward(self, e_vectors, W, i):
-        loss = torch.zeros(e_vectors.shape[0],1).to(self.device)
-        for b in range(e_vectors.shape[0]):
-            for k in range(e_vectors.shape[1]):
-                loss[b] += torch.abs(e_vectors[b,k].squeeze() - W[:,b]).mean()
-            loss[b] = loss[b]/e_vectors.shape[1]
-        loss = loss.mean()
-        return loss * self.match_weight
+        # loss = torch.zeros(e_vectors.shape[0],1).to(self.device)
+        # for b in range(e_vectors.shape[0]):
+        #     for k in range(e_vectors.shape[1]):
+        #         loss[b] += torch.abs(e_vectors[b,k].squeeze() - W[:,b]).mean()
+        #     loss[b] = loss[b]/e_vectors.shape[1]
+        # loss = loss.mean()
+        W = W.unsqueeze(-1).expand(512, W.shape[1], e_vectors.shape[1]).transpose(0,1).transpose(1,2)
+        #B,8,512
+        return self.l1_loss(e_vectors.squeeze(-1), W) * self.match_weight
     
 class LossG(nn.Module):
     """
