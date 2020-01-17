@@ -123,19 +123,30 @@ for epoch in range(epochCurrent, num_epochs):
             r, D_res_list = D(x, g_y, i)
 
             lossG = criterionG(x, x_hat, r_hat, D_res_list, D_hat_res_list, e_vectors, D.W_i, i)
+            # lossD = criterionDfake(r_hat) + criterionDreal(r)
+            # loss = lossG + lossD
+            # loss.backward(retain_graph=False)
+            lossG.backward(retain_graph=False)
+            optimizerG.step()
+            # optimizerD.step()
+            
+            optimizerD.zero_grad()
+            x_hat.detach_()
+            r_hat, D_hat_res_list = D(x_hat, g_y, i)
+            r, D_res_list = D(x, g_y, i)
+
             lossDfake = criterionDfake(r_hat)
             lossDreal = criterionDreal(r)
 
-            loss = lossDreal + lossDfake + lossG
-            loss.backward(retain_graph=False)
-            optimizerG.step()
+            lossD = lossDreal + lossDfake
+            lossD.backward(retain_graph=False)
             optimizerD.step()
             
             
             #train D again
             optimizerG.zero_grad()
             optimizerD.zero_grad()
-            x_hat.detach_()
+            # x_hat.detach_()
             r_hat, D_hat_res_list = D(x_hat, g_y, i)
             r, D_res_list = D(x, g_y, i)
 
