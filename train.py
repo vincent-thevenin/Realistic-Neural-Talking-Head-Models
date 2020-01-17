@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from datetime import datetime
-#import matplotlib
+import matplotlib
 #matplotlib.use('agg')
 from matplotlib import pyplot as plt
 plt.ion()
@@ -21,10 +21,10 @@ from tqdm import tqdm
 from params.params import K, path_to_chkpt, path_to_backup, path_to_Wi, batch_size, path_to_preprocess, frame_shape
 
 """Create dataset and net"""
+display_training = True
 device = torch.device("cuda:0")
 cpu = torch.device("cpu")
 dataset = PreprocessDataset(K=K, path_to_preprocess=path_to_preprocess, path_to_Wi=path_to_Wi)
-
 dataLoader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
 
 G = Generator(frame_shape).to(device)
@@ -87,6 +87,8 @@ optimizerD = optim.Adam(params = D.parameters(), lr=2e-4)
 """Training"""
 batch_start = datetime.now()
 pbar = tqdm(dataLoader, leave=True, initial=i_batch_current)
+if not display_training:
+    matplotlib.use('agg')
 
 for epoch in range(epochCurrent, num_epochs):
     if epoch > epochCurrent:
@@ -150,55 +152,56 @@ for epoch in range(epochCurrent, num_epochs):
 
         # Output training stats
         if i_batch % 10 == 0:
-            batch_end = datetime.now()
-            avg_time = (batch_end - batch_start) / 100
+            #batch_end = datetime.now()
+            #avg_time = (batch_end - batch_start) / 100
             # print('\n\navg batch time for batch size of', x.shape[0],':',avg_time)
             
-            batch_start = datetime.now()
+            #batch_start = datetime.now()
             
             # print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(y)): %.4f'
             #       % (epoch, num_epochs, i_batch, len(dataLoader),
             #          lossD.item(), lossG.item(), r.mean(), r_hat.mean()))
-            pbar.set_postfix(epoch=epoch, lossD=lossD.item(), lossG=lossG.item(), r=r.mean().item(), r_hat=r_hat.mean().item())
+            pbar.set_postfix(epoch=epoch, lossD=lossD.item(), lossG=lossG.item())
 
-            plt.clf()
-            out = (x_hat[0]*255).transpose(0,2)
-            for img_no in range(1,x_hat.shape[0]):
-                out = torch.cat((out, (x_hat[img_no]*255).transpose(0,2)), dim = 1)
-            out = out.type(torch.int32).to(cpu).numpy()
-            fig = out
+            if display_training:
+                plt.clf()
+                out = (x_hat[0]*255).transpose(0,2)
+                for img_no in range(1,x_hat.shape[0]):
+                    out = torch.cat((out, (x_hat[img_no]*255).transpose(0,2)), dim = 1)
+                out = out.type(torch.int32).to(cpu).numpy()
+                fig = out
 
-            plt.clf()
-            out = (x[0]*255).transpose(0,2)
-            for img_no in range(1,x.shape[0]):
-                out = torch.cat((out, (x[img_no]*255).transpose(0,2)), dim = 1)
-            out = out.type(torch.int32).to(cpu).numpy()
-            fig = np.concatenate((fig, out), 0)
+                plt.clf()
+                out = (x[0]*255).transpose(0,2)
+                for img_no in range(1,x.shape[0]):
+                    out = torch.cat((out, (x[img_no]*255).transpose(0,2)), dim = 1)
+                out = out.type(torch.int32).to(cpu).numpy()
+                fig = np.concatenate((fig, out), 0)
 
-            plt.clf()
-            out = (g_y[0]*255).transpose(0,2)
-            for img_no in range(1,g_y.shape[0]):
-                out = torch.cat((out, (g_y[img_no]*255).transpose(0,2)), dim = 1)
-            out = out.type(torch.int32).to(cpu).numpy()
+                plt.clf()
+                out = (g_y[0]*255).transpose(0,2)
+                for img_no in range(1,g_y.shape[0]):
+                    out = torch.cat((out, (g_y[img_no]*255).transpose(0,2)), dim = 1)
+                out = out.type(torch.int32).to(cpu).numpy()
+                
+                fig = np.concatenate((fig, out), 0)
+                plt.imshow(fig)
+                plt.xticks([])
+                plt.yticks([])
+                plt.draw()
+                plt.pause(0.001)
             
-            fig = np.concatenate((fig, out), 0)
-            plt.imshow(fig)
-            plt.xticks([])
-            plt.yticks([])
-            plt.draw()
-            plt.pause(0.001)
-            
             
 
-        # if i_batch % 1000 == 999:
-        if i_batch%70 == 69:
+        if i_batch % 1000 == 999:
             lossesD.append(lossD.item())
             lossesG.append(lossG.item())
 
-            plt.clf()
-            plt.plot(lossesG) #blue
-            plt.plot(lossesD) #orange
-            plt.show()
+            if display_training:
+                plt.clf()
+                plt.plot(lossesG) #blue
+                plt.plot(lossesD) #orange
+                plt.show()
 
             print('Saving latest...')
             torch.save({
