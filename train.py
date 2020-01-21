@@ -130,9 +130,8 @@ for epoch in range(epochCurrent, num_epochs):
             optimizerG.step()
             # optimizerD.step()
             
-            optimizerG.zero_grad()
             optimizerD.zero_grad()
-            x_hat.detach_()
+            x_hat.detach_().requires_grad_()
             r_hat, D_hat_res_list = D(x_hat, g_y, i)
             r, D_res_list = D(x, g_y, i)
 
@@ -146,7 +145,7 @@ for epoch in range(epochCurrent, num_epochs):
             
             #train D again
             optimizerD.zero_grad()
-            # x_hat.detach_()
+            # x_hat.detach_().requires_grad_()
             r_hat, D_hat_res_list = D(x_hat, g_y, i)
             r, D_res_list = D(x, g_y, i)
 
@@ -242,4 +241,15 @@ for epoch in range(epochCurrent, num_epochs):
                     }, path_to_backup)
             print('...Done saving latest')
 
-
+    print('Saving latest...')
+    torch.save({
+            'epoch': epoch,
+            'lossesG': lossesG,
+            'lossesD': lossesD,
+            'E_state_dict': E.state_dict(),
+            'G_state_dict': G.state_dict(),
+            'D_state_dict': D.state_dict(),
+            'num_vid': dataset.__len__(),
+            'i_batch': i_batch
+            }, path_to_chkpt)
+    print('...Done saving latest')

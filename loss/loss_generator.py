@@ -32,7 +32,8 @@ class LossCnt(nn.Module):
         with torch.no_grad(): #no need for gradient compute
             vgg_x_features = self.VGGFace(x) #returns a list of feature maps at desired layers
 
-        vgg_xhat_features = self.VGGFace(x_hat)
+        with torch.autograd.enable_grad():
+            vgg_xhat_features = self.VGGFace(x_hat)
 
         lossface = 0
         for x_feat, xhat_feat in zip(vgg_x_features, vgg_xhat_features):
@@ -93,7 +94,8 @@ class LossCnt(nn.Module):
                 if conv_idx_iter < len(self.conv_idx_list)-1:
                     conv_idx_iter += 1
                 vgg_xhat_handles.append(m.register_forward_hook(vgg_xhat_hook))
-        self.VGG19(x_hat)
+        with torch.autograd.enable_grad():
+            self.VGG19(x_hat)
         #retrieve features for x
         for h in vgg_xhat_handles:
             h.remove()
