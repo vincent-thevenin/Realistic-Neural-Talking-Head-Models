@@ -120,7 +120,7 @@ class Generator(nn.Module):
         else:
             p = self.p.unsqueeze(0)
             p = p.expand(e.shape[0],self.P_LEN,512)
-            e_psi = torch.bmm(p, e)
+            e_psi = torch.bmm(p, e) #B, p_len, 1
         
         #in 3*224*224 for voxceleb2
         out = self.pad(y)
@@ -216,7 +216,10 @@ class Discriminator(nn.Module):
     def finetuning_init(self):
         if self.finetuning:
             self.w_prime = nn.Parameter( self.w_0 + self.e_finetuning.mean(dim=0))
-        
+    
+    def load_W_i(self, W_i):
+        self.W_i.data = W_i
+    
     def forward(self, x, y, i):
         out = torch.cat((x,y), dim=-3) #out B*6*224*224
         
