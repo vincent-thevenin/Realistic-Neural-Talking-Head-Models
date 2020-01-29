@@ -11,7 +11,7 @@ class Embedder(nn.Module):
     def __init__(self, in_height):
         super(Embedder, self).__init__()
         
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
         
         #in 6*224*224
         self.pad = Padding(in_height) #out 6*256*256
