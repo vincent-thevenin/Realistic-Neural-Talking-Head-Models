@@ -25,7 +25,10 @@ display_training = True
 device = torch.device("cuda:0")
 cpu = torch.device("cpu")
 dataset = PreprocessDataset(K=K, path_to_preprocess=path_to_preprocess, path_to_Wi=path_to_Wi)
-dataLoader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
+dataLoader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
+                        num_workers=16,
+                        pin_memory=True,
+                        drop_last = True)
 
 G = Generator(frame_shape).to(device)
 E = Embedder(frame_shape).to(device)
@@ -89,28 +92,34 @@ G.train()
 E.train()
 D.train()
 
-optimizerG = optim.Adam(params = list(E.parameters()) + list(G.parameters()), lr=5e-5)
-optimizerD = optim.Adam(params = D.parameters(), lr=2e-4)
+optimizerG = optim.Adam(params = list(E.parameters()) + list(G.parameters()),
+                        lr=5e-5,
+                        amsgrad=False)
+optimizerD = optim.Adam(params = D.parameters(),
+                        lr=2e-4,
+                        amsgrad=False)
 
 """Training"""
 batch_start = datetime.now()
-pbar = tqdm(dataLoader, leave=True, initial=i_batch_current)
+pbar = tqdm(dataLoader, leave=True, initial=0)
 if not display_training:
     matplotlib.use('agg')
+
 
 for epoch in range(epochCurrent, num_epochs):
     if epoch > epochCurrent:
         i_batch_current = 0
-        pbar = tqdm(dataLoader, leave=True, initial=i_batch_current)
+        pbar = tqdm(dataLoader, leave=True, initial=0)
     pbar.set_postfix(epoch=epoch)
-    for i_batch, (f_lm, x, g_y, i, W_i) in enumerate(pbar, start=i_batch_current):
+    for i_batch, (f_lm, x, g_y, i, W_i) in enumerate(pbar, start=0):
         
         f_lm = f_lm.to(device)
         x = x.to(device)
         g_y = g_y.to(device)
-        W_i = W_i.squeeze(-1).transpose(0,1).to(device)
+        W_i = W_i.squeeze(-1).transpose(0,1).to(device).requires_grad_()
         
-        D.W_i = nn.Parameter(W_i.detach())
+        D.load_W_i(W_i)
+        
         with torch.autograd.enable_grad():
             #zero the parameter gradients
             optimizerG.zero_grad()
@@ -179,7 +188,7 @@ for epoch in range(epochCurrent, num_epochs):
             # print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(y)): %.4f'
             #       % (epoch, num_epochs, i_batch, len(dataLoader),
             #          lossD.item(), lossG.item(), r.mean(), r_hat.mean()))
-            pbar.set_postfix(epoch=epoch, lossD=lossD.item(), lossG=lossG.item())
+            pbar.set_postfix(epoch=epoch, r=r[0].item(), r_hat=r_hat[0].item(), lossG=lossG.item())
 
             if display_training:
                 plt.clf()
