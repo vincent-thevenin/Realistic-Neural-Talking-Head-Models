@@ -26,8 +26,10 @@ class LossCnt(nn.Module):
         self.l1_loss = nn.L1Loss()
         self.conv_idx_list = [2,7,12,21,30] #idxes of conv layers in VGG19 cf.paper
 
-    def forward(self, x, x_hat, vgg19_weight=1e-2, vggface_weight=2e-3):
-
+    def forward(self, x, x_hat, vgg19_weight=1.5e-1, vggface_weight=2.5e-2):
+        self.VGG19.zero_grad()
+        self.VGGFace.zero_grad()
+        
         """Retrieve vggface feature maps"""
         with torch.no_grad(): #no need for gradient compute
             vgg_x_features = self.VGGFace(x) #returns a list of feature maps at desired layers
@@ -71,34 +73,37 @@ class LossCnt(nn.Module):
         for h in vgg_x_handles:
             h.remove()
 
-        # #retrieve features for x_hat
-        # conv_idx_iter = 0
-        # for i,m in enumerate(self.VGG19.modules()):
-        #     if i <= 30: #30 is last conv layer
-        #         if type(m) is not torch.nn.Sequential and type(m) is not torchvision.models.vgg.VGG:
-        #         #only pass through nn.module layers
-        #             if i == conv_idx_list[conv_idx_iter]:
-        #                 if conv_idx_iter < len(conv_idx_list)-1:
-        #                     conv_idx_iter += 1
-        #                 x_hat = m(x_hat)
-        #                 vgg_xhat_features.append(x_hat)
-        #                 x_hat.detach_() #reset gradient from output of conv layer
-        #             else:
-        #                 x_hat = m(x_hat)
-        vgg_xhat_handles = []
+        #retrieve features for x_hat
         conv_idx_iter = 0
+        for i,m in enumerate(self.VGG19.modules()):
+            if i <= 30: #30 is last conv layer
+                if type(m) is not torch.nn.Sequential and type(m) is not torchvision.models.vgg.VGG:
+                #only pass through nn.module layers
+                    if i == self.conv_idx_list[conv_idx_iter]:
+                        if conv_idx_iter < len(self.conv_idx_list)-1:
+                            conv_idx_iter += 1
+                        x_hat = m(x_hat)
+                        vgg_xhat_features.append(x_hat)
+                        x_hat.detach_() #reset gradient from output of conv layer
+                    else:
+                        x_hat = m(x_hat)
+                        
+                        
+        # vgg_xhat_handles = []
+        # conv_idx_iter = 0
         
-        #place hooks
-        for i,m in enumerate(self.VGG19.features.modules()):
-            if i == self.conv_idx_list[conv_idx_iter]:
-                if conv_idx_iter < len(self.conv_idx_list)-1:
-                    conv_idx_iter += 1
-                vgg_xhat_handles.append(m.register_forward_hook(vgg_xhat_hook))
-        with torch.autograd.enable_grad():
-            self.VGG19(x_hat)
-        #retrieve features for x
-        for h in vgg_xhat_handles:
-            h.remove()
+        # #place hooks
+        # with torch.autograd.enable_grad():
+        #     for i,m in enumerate(self.VGG19.features.modules()):
+        #         if i == self.conv_idx_list[conv_idx_iter]:
+        #             if conv_idx_iter < len(self.conv_idx_list)-1:
+        #                 conv_idx_iter += 1
+        #             vgg_xhat_handles.append(m.register_forward_hook(vgg_xhat_hook))
+        #     self.VGG19(x_hat)
+        
+        #     #retrieve features for x
+        #     for h in vgg_xhat_handles:
+        #         h.remove()
         
         loss19 = 0
         for x_feat, xhat_feat in zip(vgg_x_features, vgg_xhat_features):
@@ -120,11 +125,11 @@ class LossAdv(nn.Module):
         for res, res_hat in zip(D_res_list, D_hat_res_list):
             lossFM += self.l1_loss(res, res_hat)
             
-        return -r_hat.squeeze().mean() + lossFM * self.FM_weight
+        return -r_hat.mean() + lossFM * self.FM_weight
 
 
 class LossMatch(nn.Module):
-    def __init__(self, device, match_weight=8e1):
+    def __init__(self, device, match_weight=1e1):
         super(LossMatch, self).__init__()
         self.l1_loss = nn.L1Loss()
         self.match_weight = match_weight
@@ -137,6 +142,7 @@ class LossMatch(nn.Module):
         #         loss[b] += torch.abs(e_vectors[b,k].squeeze() - W[:,b]).mean()
         #     loss[b] = loss[b]/e_vectors.shape[1]
         # loss = loss.mean()
+        
         W = W.unsqueeze(-1).expand(512, W.shape[1], e_vectors.shape[1]).transpose(0,1).transpose(1,2)
         #B,8,512
         return self.l1_loss(e_vectors.squeeze(-1), W) * self.match_weight
@@ -147,17 +153,18 @@ class LossG(nn.Module):
     Inputs: x, x_hat, r_hat, D_res_list, D_hat_res_list, e, W, i
     output: lossG
     """
-    def __init__(self, VGGFace_body_path, VGGFace_weight_path, device, vgg19_weight=1e-2, vggface_weight=2e-3):
+    def __init__(self, VGGFace_body_path, VGGFace_weight_path, device):
         super(LossG, self).__init__()
         
-        self.LossCnt = LossCnt(VGGFace_body_path, VGGFace_weight_path, device)
+        self.lossCnt = LossCnt(VGGFace_body_path, VGGFace_weight_path, device)
         self.lossAdv = LossAdv()
         self.lossMatch = LossMatch(device=device)
         
-    def forward(self, x, x_hat, r_hat, D_res_list, D_hat_res_list, e_vectors, W, i):
-        loss_cnt = self.LossCnt(x, x_hat)
+    def forward(self, x, x_hat, r_hat, D_res_list, D_hat_res_list, e_hat, W, i):
+        loss_cnt = self.lossCnt(x, x_hat)
         loss_adv = self.lossAdv(r_hat, D_res_list, D_hat_res_list)
-        loss_match = self.lossMatch(e_vectors, W, i)
+        loss_match = self.lossMatch(e_hat, W, i)
+        # print(loss_cnt.item(), loss_adv.item(), loss_match.item())
         return loss_cnt + loss_adv + loss_match
 
 class LossGF(nn.Module):
