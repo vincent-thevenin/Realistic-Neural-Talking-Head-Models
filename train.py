@@ -257,16 +257,16 @@ for epoch in range(epochCurrent, num_epochs):
                     'i_batch': i_batch
                     }, path_to_backup)
             print('...Done saving latest')
-
-    print('Saving latest...')
-    torch.save({
-            'epoch': epoch,
-            'lossesG': lossesG,
-            'lossesD': lossesD,
-            'E_state_dict': E.state_dict(),
-            'G_state_dict': G.state_dict(),
-            'D_state_dict': D.state_dict(),
-            'num_vid': dataset.__len__(),
-            'i_batch': i_batch
-            }, path_to_chkpt)
-    print('...Done saving latest')
+    if epoch%5 == 0:
+        print('Saving latest...')
+        torch.save({
+                'epoch': epoch,
+                'lossesG': lossesG,
+                'lossesD': lossesD,
+                'E_state_dict': E.state_dict(),
+                'G_state_dict': G.state_dict(),
+                'D_state_dict': D.state_dict(),
+                'num_vid': dataset.__len__(),
+                'i_batch': i_batch
+                }, 'epochs_weights.tar')
+        print('...Done saving latest')
