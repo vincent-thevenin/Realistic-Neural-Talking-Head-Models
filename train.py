@@ -137,7 +137,8 @@ for epoch in range(epochCurrent, num_epochs):
             #train G and D
             x_hat = G(g_y, e_hat)
             r_hat, D_hat_res_list = D(x_hat, g_y, i)
-            r, D_res_list = D(x, g_y, i)
+            with torch.no_grad():
+                r, D_res_list = D(x, g_y, i)
 
             lossG = criterionG(x, x_hat, r_hat, D_res_list, D_hat_res_list, e_vectors, D.W_i, i)
             # lossD = criterionDfake(r_hat) + criterionDreal(r)
