@@ -39,7 +39,7 @@ class Embedder(nn.Module):
         out = self.resDown6(out) #out 512*4*4
         
         out = self.sum_pooling(out) #out 512*1*1
-        out = self.relu(out) #out 512*1*1
+        # out = self.relu(out) #out 512*1*1 #REMOVED FOR LOSS MATCH
         out = out.view(-1,512,1) #out B*512*1
         return out
 
