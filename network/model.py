@@ -167,11 +167,20 @@ class Generator(nn.Module):
         
         #out 3*224*224
         return out
-        
+
+# class W_i_class(nn.Module):
+#     def __init__(self):
+#         super(W_i_class, self).__init__()
+#         self.W_i = nn.Parameter(torch.randn(512,2))
+    
+#     def forward(self):
+#         return self.W_i
+
 class Discriminator(nn.Module):
     def __init__(self, num_videos, path_to_Wi, finetuning=False, e_finetuning=None):
         super(Discriminator, self).__init__()
         self.path_to_Wi = path_to_Wi
+        self.relu = nn.ReLU()
         
         #in 6*224*224
         self.pad = Padding(224) #out 6*256*256
@@ -230,6 +239,8 @@ class Discriminator(nn.Module):
         out7 = self.res(out6)
         
         out = self.sum_pooling(out7)
+        
+        out = self.relu(out)
         
         out = out.view(-1,512,1) #out B*512*1
         
