@@ -90,12 +90,14 @@ class PreprocessDataset(Dataset):
         g_y = frame_mark[g_idx,1].squeeze()
         
         try:
-            W_i = torch.load(self.path_to_Wi+'/W_'+str(vid_idx)+'/W_'+str(vid_idx)+'.tar')['W_i']
+            W_i = torch.load(self.path_to_Wi+'/W_'+str(vid_idx)+'/W_'+str(vid_idx)+'.tar',
+                          map_location='cpu')['W_i'].requires_grad_(False)
         except:
+            print("\n\nerror loading: ", self.path_to_Wi+'/W_'+str(vid_idx)+'/W_'+str(vid_idx)+'.tar')
             W_i = torch.rand((512,1))
                 
         return frame_mark, x, g_y, vid_idx, W_i
-
+    
 class FineTuningImagesDataset(Dataset):
     def __init__(self, path_to_images, device):
         self.path_to_images = path_to_images
