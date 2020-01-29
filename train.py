@@ -49,22 +49,30 @@ lossesG = []
 lossesD = []
 i_batch_current = 0
 
-num_epochs = 75
+num_epochs = 75*2
 
 #initiate checkpoint if inexistant
 if not os.path.isfile(path_to_chkpt):
-  print('Initiating new checkpoint...')
-  torch.save({
-          'epoch': epoch,
-          'lossesG': lossesG,
-          'lossesD': lossesD,
-          'E_state_dict': E.state_dict(),
-          'G_state_dict': G.state_dict(),
-          'D_state_dict': D.state_dict(),
-          'num_vid': dataset.__len__(),
-          'i_batch': i_batch
-          }, path_to_chkpt)
-  print('...Done')
+    def init_weights(m):
+        if type(m) == nn.Conv2d:
+            torch.nn.init.xavier_uniform(m.weight)
+    G.apply(init_weights)
+    D.apply(init_weights)
+    E.apply(init_weights)
+
+    print('Initiating new checkpoint...')
+    torch.save({
+            'epoch': epoch,
+            'lossesG': lossesG,
+            'lossesD': lossesD,
+            'E_state_dict': E.state_dict(),
+            'G_state_dict': G.state_dict(),
+            'D_state_dict': D.state_dict(),
+            'num_vid': dataset.__len__(),
+            'i_batch': i_batch
+            }, path_to_chkpt)
+    print('...Done')
+
 
 """Loading from past checkpoint"""
 checkpoint = torch.load(path_to_chkpt, map_location=cpu)
