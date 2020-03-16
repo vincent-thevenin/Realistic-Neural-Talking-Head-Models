@@ -5,8 +5,8 @@ class ResBlockDown(nn.Module):
     def __init__(self, in_channel, out_channel, conv_size=3, padding_size=1):
         super(ResBlockDown, self).__init__()
         
-        self.relu = nn.ReLU()
-        self.relu_inplace = nn.ReLU(inplace = False)
+        self.relu = nn.LeakyReLU()
+        self.relu_inplace = nn.LeakyReLU(inplace = False)
         self.avg_pool2d = nn.AvgPool2d(2)
         
         #left
@@ -34,7 +34,7 @@ class ResBlockDown(nn.Module):
         out = out_res + out
         
         return out
-    
+
 class SelfAttention(nn.Module):
     def __init__(self, in_channel):
         super(SelfAttention, self).__init__()
@@ -94,7 +94,7 @@ class ResBlock(nn.Module):
         #using no ReLU method
         
         #general
-        self.relu = nn.ReLU(inplace = False)
+        self.relu = nn.LeakyReLU(inplace = False)
         
         #left
         self.conv1 = nn.utils.spectral_norm(nn.Conv2d(in_channel, in_channel, 3, padding = 1))
@@ -122,7 +122,7 @@ class ResBlockD(nn.Module):
         #using no ReLU method
         
         #general
-        self.relu = nn.ReLU(inplace = False)
+        self.relu = nn.LeakyReLU(inplace = False)
         
         #left
         self.conv1 = nn.utils.spectral_norm(nn.Conv2d(in_channel, in_channel, 3, padding = 1))
