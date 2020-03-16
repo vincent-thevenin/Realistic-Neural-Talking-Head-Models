@@ -62,7 +62,7 @@ class PreprocessDataset(Dataset):
             #     if len(os.listdir(os.path.join(self.path_to_preprocess, person_id, video_id))) == 2*self.K:
             #         vid_num += 1
             vid_num += len(os.listdir(os.path.join(self.path_to_preprocess, person_id)))
-        return vid_num
+        return vid_num-1
     
     def __getitem__(self, idx):
         vid_idx = idx
