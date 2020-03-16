@@ -5,13 +5,14 @@ from .blocks import ResBlockDown, SelfAttention, ResBlock, ResBlockD, ResBlockUp
 import math
 import sys
 import os
+from tqdm import tqdm
 
 #components
 class Embedder(nn.Module):
     def __init__(self, in_height):
         super(Embedder, self).__init__()
         
-        self.relu = nn.ReLU(inplace=False)
+        self.relu = nn.LeakyReLU(inplace=False)
         
         #in 6*224*224
         self.pad = Padding(in_height) #out 6*256*256
@@ -25,7 +26,6 @@ class Embedder(nn.Module):
         self.sum_pooling = nn.AdaptiveMaxPool2d((1,1)) #out 512*1*1
 
     def forward(self, x, y):
-        
         out = torch.cat((x,y),dim = -3) #out 6*224*224
         out = self.pad(out) #out 6*256*256
         out = self.resDown1(out) #out 64*128*128
@@ -39,7 +39,7 @@ class Embedder(nn.Module):
         out = self.resDown6(out) #out 512*4*4
         
         out = self.sum_pooling(out) #out 512*1*1
-        # out = self.relu(out) #out 512*1*1 #REMOVED FOR LOSS MATCH
+        out = self.relu(out) #out 512*1*1
         out = out.view(-1,512,1) #out B*512*1
         return out
 
@@ -180,7 +180,7 @@ class Discriminator(nn.Module):
     def __init__(self, num_videos, path_to_Wi, finetuning=False, e_finetuning=None):
         super(Discriminator, self).__init__()
         self.path_to_Wi = path_to_Wi
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
         
         #in 6*224*224
         self.pad = Padding(224) #out 6*256*256
