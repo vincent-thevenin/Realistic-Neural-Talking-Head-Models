@@ -143,6 +143,6 @@ class FineTuningVideoDataset(Dataset):
         frame_mark = torch.from_numpy(np.array(frame_mark)).type(dtype = torch.float) #1,2,256,256,3
         frame_mark = frame_mark.transpose(2,4).to(self.device) #1,2,3,256,256
         
-        x = frame_mark[0,0].squeeze()
-        g_y = frame_mark[0,1].squeeze()
+        x = frame_mark[0,0].squeeze()/255
+        g_y = frame_mark[0,1].squeeze()/255
         return x, g_y
