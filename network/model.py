@@ -219,7 +219,7 @@ class Discriminator(nn.Module):
             self.w_prime = nn.Parameter( self.w_0 + self.e_finetuning.mean(dim=0))
     
     def load_W_i(self, W_i):
-        self.W_i.data = W_i
+        self.W_i.data = self.relu(W_i)
     
     def forward(self, x, y, i):
         out = torch.cat((x,y), dim=-3) #out B*6*224*224
