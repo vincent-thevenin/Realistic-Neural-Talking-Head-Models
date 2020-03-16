@@ -195,19 +195,18 @@ class Discriminator(nn.Module):
         self.resDown6 = ResBlockDown(512, 512) #out 512*4*4
         self.res = ResBlockD(512) #out 512*4*4
         self.sum_pooling = nn.AdaptiveAvgPool2d((1,1)) #out 512*1*1
+
         
         if not finetuning:
             print('Initializing Discriminator weights')
             if not os.path.isdir(self.path_to_Wi):
                 os.mkdir(self.path_to_Wi)
-            for i in range(num_videos):
-                if i%(num_videos//100 +1) == 0:
-                    print(int(i*100/num_videos),'%')
+            for i in tqdm(range(num_videos)):
                 if not os.path.isfile(self.path_to_Wi+'/W_'+str(i)+'/W_'+str(i)+'.tar'):
                     w_i = torch.rand(512, 1)
                     os.mkdir(self.path_to_Wi+'/W_'+str(i))
                     torch.save({'W_i': w_i}, self.path_to_Wi+'/W_'+str(i)+'/W_'+str(i)+'.tar')
-        self.W_i = nn.Parameter(torch.rand(512, 2))
+        self.W_i = nn.Parameter(torch.randn(512, 32))
         self.w_0 = nn.Parameter(torch.randn(512,1))
         self.b = nn.Parameter(torch.randn(1))
         
