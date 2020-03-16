@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 from matplotlib import pyplot as plt
 import matplotlib
-matplotlib.use('agg')
 
 import numpy as np
 
@@ -18,6 +17,8 @@ from params.params import K, path_to_chkpt, path_to_backup, path_to_Wi, batch_si
 
 """Hyperparameters and config"""
 display_training = True
+if not display_training:
+	matplotlib.use('agg')
 device = torch.device("cuda:0")
 cpu = torch.device("cpu")
 path_to_embedding = 'e_hat_images.tar'
@@ -73,10 +74,10 @@ if os.path.isfile(path_to_save):
 
 """Loading from past checkpoint"""
 checkpoint = torch.load(path_to_chkpt, map_location=cpu)
-checkpoint['D_state_dict']['W_i'] = torch.rand(512, dataset.__len__()) #change W_i for finetuning
+checkpoint['D_state_dict']['W_i'] = torch.rand(512, 32) #change W_i for finetuning
 
-G.load_state_dict(checkpoint['G_state_dict'], strict = False)
-D.load_state_dict(checkpoint['D_state_dict'])
+G.load_state_dict(checkpoint['G_state_dict'])
+D.load_state_dict(checkpoint['D_state_dict'], strict = False)
 
 
 """Change to finetuning mode"""
