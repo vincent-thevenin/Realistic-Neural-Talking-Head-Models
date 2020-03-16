@@ -99,6 +99,7 @@ class Generator(nn.Module):
 
         self.resUp3 = ResBlockUp(128, 64) #out 64*128*128
         self.resUp4 = ResBlockUp(64, 3, out_size=(in_height, in_height), scale=None, conv_size=9, padding_size=4) #out 3*224*224
+        self.in5 = nn.InstanceNorm2d(3, affine=True)
         
         self.p = nn.Parameter(torch.rand(self.P_LEN,512).normal_(0.0,0.02))
         
@@ -160,6 +161,7 @@ class Generator(nn.Module):
         
         out = self.resUp4(out, e_psi[:, self.slice_idx[8]:self.slice_idx[9], :])
         
+        out = self.in5(out)
         
         out = self.sigmoid(out)
         
