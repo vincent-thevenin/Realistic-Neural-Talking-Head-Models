@@ -314,6 +314,7 @@ class Cropped_VGG19(nn.Module):
         pool4           = F.max_pool2d(pool4_pad, kernel_size=(2, 2), stride=(2, 2), padding=0, ceil_mode=False)
         conv5_1_pad     = F.pad(pool4, (1, 1, 1, 1))
         conv5_1         = self.conv5_1(conv5_1_pad)
+        relu5_1         = F.relu(conv5_1)
         
-        return [conv1_1, conv2_1, conv3_1, conv4_1, conv5_1]
+        return [relu1_1, relu2_1, relu3_1, relu4_1, relu5_1]
     
