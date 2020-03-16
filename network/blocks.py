@@ -141,14 +141,17 @@ class ResBlockD(nn.Module):
 
 
 class ResBlockUp(nn.Module):
-    def __init__(self, in_channel, out_channel, out_size=None, scale = 2, conv_size=3, padding_size = 1):
+    def __init__(self, in_channel, out_channel, out_size=None, scale = 2, conv_size=3, padding_size = 1, is_bilinear = False):
         super(ResBlockUp, self).__init__()
         
         self.in_channel = in_channel
         self.out_channel = out_channel
         
-        self.upsample = nn.Upsample(size = out_size, scale_factor=scale)
-        self.relu = nn.ReLU(inplace = False)
+        if is_bilinear:
+            self.upsample = nn.Upsample(size = out_size, scale_factor=scale, mode='bilinear')
+        else:
+            self.upsample = nn.Upsample(size = out_size, scale_factor=scale)
+        self.relu = nn.LeakyReLU(inplace = False)
         
         #left
         self.conv_l1 = nn.utils.spectral_norm(nn.Conv2d(in_channel, out_channel, 1))
