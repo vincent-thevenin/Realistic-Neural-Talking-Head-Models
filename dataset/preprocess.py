@@ -118,7 +118,7 @@ for person_id in tqdm(os.listdir(path_to_mp4)):
                     if not os.path.isdir(saves_dir+"/"+str(num_vid//256)):
                         os.mkdir(saves_dir+"/"+str(num_vid//256))
                         
-                    cv2.imwrite(saves_dir+"/"+str(num_vid//256)+"/"+str(num_vid)+".jpg", final_list)
+                    cv2.imwrite(saves_dir+"/"+str(num_vid//256)+"/"+str(num_vid)+".png", final_list)
                     num_vid += 1
                     break #take only one video
 

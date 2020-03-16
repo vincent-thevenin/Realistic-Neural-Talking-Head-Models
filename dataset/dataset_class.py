@@ -80,7 +80,7 @@ class PreprocessDataset(Dataset):
         #         break
         path = os.path.join(self.path_to_preprocess,
                             str(idx//256),
-                            str(idx)+".jpg")
+                            str(idx)+".png")
         frame_mark = select_preprocess_frames(path)
         frame_mark = torch.from_numpy(np.array(frame_mark)).type(dtype = torch.float) #K,2,224,224,3
         frame_mark = frame_mark.transpose(2,4)/255 #K,2,3,224,224
