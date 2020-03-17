@@ -79,5 +79,5 @@ with torch.no_grad():
 
 
         for enum, idx in enumerate(i):
-            torch.save({'W_i': e_hat[enum,:].unsqueeze(0)}, path_to_Wi+'/W_'+str(idx.item()//256)+'/W_'+str(idx.item())+'.tar')
+            torch.save({'W_i': e_hat[enum,:].unsqueeze(0)}, path_to_Wi+'/W_'+str(idx.item())+'/W_'+str(idx.item())+'.tar')
 
