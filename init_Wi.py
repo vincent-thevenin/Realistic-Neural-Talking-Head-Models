@@ -50,6 +50,15 @@ num_vid = checkpoint['num_vid']
 
 E.train(False)
 
+#init W_i
+print('Initializing Discriminator weights')
+if not os.path.isdir(self.path_to_Wi):
+    os.mkdir(self.path_to_Wi)
+for i in tqdm(range(num_videos)):
+    if not os.path.isfile(self.path_to_Wi+'/W_'+str(i)+'/W_'+str(i)+'.tar'):
+        w_i = torch.rand(512, 1)
+        os.mkdir(self.path_to_Wi+'/W_'+str(i))
+        torch.save({'W_i': w_i}, self.path_to_Wi+'/W_'+str(i)+'/W_'+str(i)+'.tar')
 
 """Training"""
 batch_start = datetime.now()
