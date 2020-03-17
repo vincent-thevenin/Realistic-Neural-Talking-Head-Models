@@ -182,6 +182,7 @@ class Discriminator(nn.Module):
     def __init__(self, num_videos, path_to_Wi, finetuning=False, e_finetuning=None):
         super(Discriminator, self).__init__()
         self.path_to_Wi = path_to_Wi
+        self.gpu_num = torch.cuda.device_count()
         self.relu = nn.LeakyReLU()
         
         #in 6*224*224
@@ -248,8 +249,8 @@ class Discriminator(nn.Module):
         
         out = out.squeeze(-1) #out B*512*1
         
-        batch_start_idx = torch.cuda.current_device() * self.W_i.shape[1]//4
-        batch_end_idx = (torch.cuda.current_device() + 1) * self.W_i.shape[1]//4
+        batch_start_idx = torch.cuda.current_device() * self.W_i.shape[1]//self.gpu_num
+        batch_end_idx = (torch.cuda.current_device() + 1) * self.W_i.shape[1]//self.gpu_num
         
         if self.finetuning:
             out = torch.bmm(out.transpose(1,2), (self.w_prime.unsqueeze(0).expand(out.shape[0],512,1))) + self.b
