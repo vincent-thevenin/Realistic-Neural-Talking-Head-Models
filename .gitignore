@@ -18,3 +18,7 @@ Pytorch_VGGFACE.pth
 Pytorch_VGGFACE_IR.py
 
 Wi_weights/
+
+.vscode/settings.json
+
+.vscode/
