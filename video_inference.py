@@ -8,15 +8,36 @@ from tqdm import tqdm
 import face_alignment
 from matplotlib import pyplot as plt
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader
+from datetime import datetime
+import matplotlib
+#matplotlib.use('agg')
+from matplotlib import pyplot as plt
+plt.ion()
+import os
+
+from dataset.dataset_class import PreprocessDataset
+from network.model import *
+from tqdm import tqdm
+
+from params.params import K, path_to_chkpt, path_to_backup, frame_shape
+
 path_to_mp4 = 'test_vid.mp4'
-K = 8
+path_to_e_hat_video = 'e_hat_video.tar'
 num_vid = 0
 device = torch.device('cuda:0')
+cpu = torch.device('cpu')
 saves_dir = 'vid_saves'
-face_aligner = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False, device ='cuda:0')
 
+isFirstTime = False
 if not os.path.isdir(saves_dir):
     os.mkdir(saves_dir)
+    isFirstTime = True
+    face_aligner = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False, device ='cuda:0')
+
 
 
 def get_borders(preds):
@@ -142,8 +163,7 @@ def pick_images(video_path, num_images, cap, n_frames, idx):
     
     # Read until video is completed or no frames needed
     ret = True
-    frame_counter = 0
-    for i in range(num_images):
+    for _ in range(num_images):
         ret, frame = cap.read()
         
         if ret:
@@ -152,33 +172,64 @@ def pick_images(video_path, num_images, cap, n_frames, idx):
     
     return frames_list
     
+if isFirstTime:
+    cap = cv2.VideoCapture(path_to_mp4)
+    n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    video_path = path_to_mp4
+    """ for person_id in tqdm(os.listdir(path_to_mp4)):
+        for video_id in tqdm(os.listdir(os.path.join(path_to_mp4, person_id))):
+            for video in os.listdir(os.path.join(path_to_mp4, person_id, video_id)):
+    """
+    for img_idx in range(n_frames//K):
+        frame_mark = pick_images(video_path, K, cap, n_frames, img_idx*K)
+        frame_mark = generate_cropped_landmarks(frame_mark, face_aligner)
+        if len(frame_mark) == K:
+            final_list = [frame_mark[i][0] for i in range(K)]
+            for i in range(K):
+                final_list.append(frame_mark[i][1]) #K*2,224,224,3
+            final_list = np.array(final_list)
+            final_list = np.transpose(final_list, [1,0,2,3])
+            final_list = np.reshape(final_list, (256, 256*2*K, 3))
+            final_list = cv2.cvtColor(final_list, cv2.COLOR_BGR2RGB)
+            
+            if not os.path.isdir(saves_dir+'/'+str(img_idx//256)):
+                os.mkdir(saves_dir)
+                
+            cv2.imwrite(saves_dir+'/'+str(img_idx//256)+"/"+str(img_idx)+".png", final_list)
 
-cap = cv2.VideoCapture(path_to_mp4)
-n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-video_path = path_to_mp4
-""" for person_id in tqdm(os.listdir(path_to_mp4)):
-    for video_id in tqdm(os.listdir(os.path.join(path_to_mp4, person_id))):
-        for video in os.listdir(os.path.join(path_to_mp4, person_id, video_id)):
-"""
-for img_idx in range(n_frames//K):
-    frame_mark = pick_images(video_path, K, cap, n_frames, img_idx*K)
-    frame_mark = generate_cropped_landmarks(frame_mark, face_aligner)
-    if len(frame_mark) == K:
-        final_list = [frame_mark[i][0] for i in range(K)]
-        for i in range(K):
-            final_list.append(frame_mark[i][1]) #K*2,224,224,3
-        final_list = np.array(final_list)
-        final_list = np.transpose(final_list, [1,0,2,3])
-        final_list = np.reshape(final_list, (256, 256*2*K, 3))
-        final_list = cv2.cvtColor(final_list, cv2.COLOR_BGR2RGB)
-        
-        if not os.path.isdir(saves_dir):
-            os.mkdir(saves_dir)
-            
-        cv2.imwrite(saves_dir+"/"+str(img_idx)+".png", final_list)
-        num_vid += 1
+    cap.release()
+    print('done')
 
-            
-            
-cap.release()
-print('done')
+
+dataset = PreprocessDataset(K=K, path_to_preprocess=saves_dir, path_to_Wi=None)
+dataLoader = DataLoader(dataset, batch_size=4, shuffle=True,
+                        num_workers=16,
+                        pin_memory=True,
+                        drop_last = False)
+
+E = nn.DataParallel(Embedder(256).to(device))
+
+checkpoint = torch.load(path_to_chkpt, map_location=cpu)
+E.module.load_state_dict(checkpoint['E_state_dict'])
+del checkpoint
+E.eval()
+
+pbar = tqdm(dataLoader, leave=True, initial=0)
+
+e_hat = torch.zeros(512, 1)
+with torch.autograd.no_grad():
+    for i_batch, (f_lm, x, g_y, i, W_i) in enumerate(pbar, start=0):
+        f_lm = f_lm.to(device)
+        x = x.to(device)
+        g_y = g_y.to(device)
+
+        f_lm_compact = f_lm.view(-1, f_lm.shape[-4], f_lm.shape[-3], f_lm.shape[-2], f_lm.shape[-1]) #BxK,2,3,224,224
+        e_vectors = E(f_lm_compact[:,0,:,:,:], f_lm_compact[:,1,:,:,:]) #BxK,512,1
+        e_vectors = e_vectors.view(-1, f_lm.shape[1], 512, 1) #B,K,512,1
+        e_hat = (e_hat*(i_batch+1) + e_vectors.mean(dim=0).mean(dim=0))/(i_batch+2)
+
+print('Saving e_hat...')
+torch.save({
+        'e_hat': e_hat
+        }, path_to_e_hat_video)
+print('...Done saving')
