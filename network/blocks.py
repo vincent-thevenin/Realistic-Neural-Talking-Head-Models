@@ -105,11 +105,12 @@ class ResBlock(nn.Module):
         
         res = x
         
-        out = self.conv1(x)
-        out = adaIN(out, psi_slice[:, 0:C//4, :], psi_slice[:, C//4:C//2, :])
+        out = adaIN(x, psi_slice[:, 0:C//4, :], psi_slice[:, C//4:C//2, :])
+        out = self.relu(out)
+        out = self.conv1(out)
+        out = adaIN(out, psi_slice[:, C//2:3*C//4, :], psi_slice[:, 3*C//4:C, :])
         out = self.relu(out)
         out = self.conv2(out)
-        out = adaIN(out, psi_slice[:, C//2:3*C//4, :], psi_slice[:, 3*C//4:C, :])
         
         out = out + res
         
@@ -141,7 +142,7 @@ class ResBlockD(nn.Module):
 
 
 class ResBlockUp(nn.Module):
-    def __init__(self, in_channel, out_channel, out_size=None, scale = 2, conv_size=3, padding_size = 1, is_bilinear = False):
+    def __init__(self, in_channel, out_channel, out_size=None, scale = 2, conv_size=3, padding_size = 1, is_bilinear = True):
         super(ResBlockUp, self).__init__()
         
         self.in_channel = in_channel
