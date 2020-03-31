@@ -142,7 +142,13 @@ class LossMatch(nn.Module):
         
         W = W.unsqueeze(-1).expand(512, W.shape[1], e_vectors.shape[1]).transpose(0,1).transpose(1,2)
         #B,8,512
-        return self.l1_loss(e_vectors.squeeze(-1), W) * self.match_weight
+        W = W.reshape(-1,512)
+        #B*8,512
+        e_vectors = e_vectors.squeeze(-1)
+        #B,8,512
+        e_vectors = e_vectors.reshape(-1,512)
+        #B*8,512
+        return self.l1_loss(e_vectors, W) * self.match_weight
     
 class LossG(nn.Module):
     """
@@ -157,10 +163,10 @@ class LossG(nn.Module):
         self.lossAdv = LossAdv()
         self.lossMatch = LossMatch(device=device)
         
-    def forward(self, x, x_hat, r_hat, D_res_list, D_hat_res_list, e_hat, W, i):
+    def forward(self, x, x_hat, r_hat, D_res_list, D_hat_res_list, e_vectors, W, i):
         loss_cnt = self.lossCnt(x, x_hat)
         loss_adv = self.lossAdv(r_hat, D_res_list, D_hat_res_list)
-        loss_match = self.lossMatch(e_hat, W, i)
+        loss_match = self.lossMatch(e_vectors, W, i)
         #print(loss_cnt.item(), loss_adv.item(), loss_match.item())
         return loss_cnt + loss_adv + loss_match
 
