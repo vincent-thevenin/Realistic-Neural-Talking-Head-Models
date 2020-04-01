@@ -143,16 +143,24 @@ for epoch in range(epochCurrent, num_epochs):
                 r_hat, D_hat_res_list = D(x_hat, g_y, i)
                 with torch.no_grad():
                     r, D_res_list = D(x, g_y, i)
+                """####################################################################################################################################################
+                r, D_res_list = D(x, g_y, i)"""
 
                 lossG = criterionG(x, x_hat, r_hat, D_res_list, D_hat_res_list, e_vectors, D.module.W_i, i)
-                # lossD = criterionDfake(r_hat) + criterionDreal(r)
-                # loss = lossG + lossD
-                # loss.backward(retain_graph=False)
+                
+                """####################################################################################################################################################
+                lossD = criterionDfake(r_hat) + criterionDreal(r)
+                loss = lossG + lossD
+                loss.backward(retain_graph=False)
+                optimizerG.step()
+                optimizerD.step()"""
+                
                 lossG.backward(retain_graph=False)
                 optimizerG.step()
-                # optimizerD.step()
+                #optimizerD.step()
             
             with torch.autograd.enable_grad():
+                optimizerG.zero_grad()
                 optimizerD.zero_grad()
                 x_hat.detach_().requires_grad_()
                 r_hat, D_hat_res_list = D(x_hat, g_y, i)
@@ -196,7 +204,7 @@ for epoch in range(epochCurrent, num_epochs):
             # print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(y)): %.4f'
             #       % (epoch, num_epochs, i_batch, len(dataLoader),
             #          lossD.item(), lossG.item(), r.mean(), r_hat.mean()))
-            pbar.set_postfix(epoch=epoch, r=r.min().item(), rhat=r_hat.max().item(), lossG=lossG.item())
+            pbar.set_postfix(epoch=epoch, r=r.mean().item(), rhat=r_hat.mean().item(), lossG=lossG.item())
 
             if display_training:
                 plt.figure(figsize=(10,10))

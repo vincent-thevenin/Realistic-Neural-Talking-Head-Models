@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .blocks import ResBlockDown, SelfAttention, ResBlock, ResBlockD, ResBlockUp, Padding
+from .blocks import ResBlockDown, SelfAttention, ResBlock, ResBlockD, ResBlockUp, Padding, adaIN
 import math
 import sys
 import os
@@ -44,7 +44,7 @@ class Embedder(nn.Module):
         return out
 
 class Generator(nn.Module):
-    P_LEN = 2*(512*2*5 + 512+256 + 256+128 + 128+64 + 64+3)
+    P_LEN = 2*(512*2*5 + 512+256 + 256+128 + 128+64 + 64+32 + 32)
     slice_idx = [0,
                 512*4, #res1
                 512*4, #res2
@@ -54,7 +54,8 @@ class Generator(nn.Module):
                 512*2 + 256*2, #resUp1
                 256*2 + 128*2, #resUp2
                 128*2 + 64*2, #resUp3
-                64*2 + 3*2] #resUp4
+                64*2 + 32*2, #resUp4
+                32*2] #last adain
     for i in range(1, len(slice_idx)):
         slice_idx[i] = slice_idx[i-1] + slice_idx[i]
     
@@ -62,6 +63,7 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
         
         self.sigmoid = nn.Sigmoid()
+        self.relu = nn.LeakyReLU(inplace = False)
         
         #in 3*224*224 for voxceleb2
         self.pad = Padding(in_height) #out 3*256*256
@@ -98,8 +100,8 @@ class Generator(nn.Module):
         self.self_att_Up = SelfAttention(128) #out 128*64*64
 
         self.resUp3 = ResBlockUp(128, 64) #out 64*128*128
-        self.resUp4 = ResBlockUp(64, 3, out_size=(in_height, in_height), scale=None, conv_size=9, padding_size=4) #out 3*224*224
-        self.in5 = nn.InstanceNorm2d(3, affine=True)
+        self.resUp4 = ResBlockUp(64, 32, out_size=(in_height, in_height), scale=None, conv_size=3, padding_size=1) #out 3*224*224
+        self.conv2d = nn.Conv2d(32, 3, 3, padding = 1)
         
         self.p = nn.Parameter(torch.rand(self.P_LEN,512).normal_(0.0,0.02))
         
@@ -161,7 +163,18 @@ class Generator(nn.Module):
         
         out = self.resUp4(out, e_psi[:, self.slice_idx[8]:self.slice_idx[9], :])
         
-        out = self.in5(out)
+        out = adaIN(out,
+                    e_psi[:,
+                          self.slice_idx[9]:(self.slice_idx[10]+self.slice_idx[9])//2,
+                          :],
+                    e_psi[:,
+                          (self.slice_idx[10]+self.slice_idx[9])//2:self.slice_idx[10],
+                          :]
+                   )
+        
+        out = self.relu(out)
+        
+        out = self.conv2d(out)
         
         out = self.sigmoid(out)
         
