@@ -21,8 +21,7 @@ if not display_training:
 	matplotlib.use('agg')
 device = torch.device("cuda:0")
 cpu = torch.device("cpu")
-path_to_embedding = 'e_hat_images.tar'
-path_to_chkpt = 'model_weights.tar'
+path_to_embedding = 'e_hat_video.tar'
 path_to_save = 'finetuned_model.tar'
 path_to_video = 'examples/fine_tuning/test_video.mp4'
 path_to_images = 'examples/fine_tuning/test_images'
