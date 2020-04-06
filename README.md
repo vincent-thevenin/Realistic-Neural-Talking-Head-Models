@@ -53,6 +53,7 @@ At this point, you will have a few files in your directory. To save some space y
 - numpy
 - cv2 (opencv-python)
 - matplotlib
+- tqdm
 
 ### 3.VoxCeleb2 Dataset
 The VoxCeleb2 dataset has videos in zip format. (Very heavy 270GB for the dev one and 8GB for the test)
@@ -61,11 +62,14 @@ http://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox2.html
 ### 4.Optional, my pretrained weights
 Available at https://drive.google.com/open?id=1vdFz4sh23hC_KIQGJjwbTfUdPG-aYor8
 
-## Running example
+## How to use:
+- modify paths in params folder to reflect your path
+- preprocess.py: preprocess our data for faster inference and lighter dataset
 - train.py: initialize and train the network or continue training from trained network
 - embedder_inference.py: (Requires trained model) Run the embedder on videos or images of a person and get embedding vector in tar file 
 - fine_tuning_trainng.py: (Requires trained model and embedding vector) finetune a trained model
 - webcam_inference.py: (Requires trained model and embedding vector) run the model using person from embedding vector and webcam input, just inference
+- video_inference.py: just like webcam_inference but on a video, change the path of the video at the start of the file
 
 
 ## Architecture
