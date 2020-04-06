@@ -36,7 +36,7 @@ cap = cv2.VideoCapture(0)
 
 with torch.no_grad():
     while True:
-        x, g_y = generate_landmarks(cap=cap, device=device, pad=50)
+        x, g_y, _ = generate_landmarks(cap=cap, device=device, pad=50)
 
         g_y = g_y.unsqueeze(0)/255
         x = x.unsqueeze(0)/255
