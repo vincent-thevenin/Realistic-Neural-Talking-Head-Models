@@ -7,16 +7,15 @@ import cv2
 from tqdm import tqdm
 import face_alignment
 from matplotlib import pyplot as plt
+from .params.params import path_to_mp4, path_to_preprocess
 
-path_to_mp4 = '/mnt/ACA21355A21322FE/VoxCeleb/vox2_mp4/dev/mp4'
 K = 8
 num_vid = 0
 device = torch.device('cuda:0')
-saves_dir = '/mnt/ACA21355A21322FE/VoxCeleb/saves'
 face_aligner = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False, device ='cuda:0')
 
-if not os.path.isdir(saves_dir):
-    os.mkdir(saves_dir)
+if not os.path.isdir(path_to_preprocess):
+    os.mkdir(path_to_preprocess)
 
 def generate_landmarks(frames_list, face_aligner):
     frame_landmark_list = []
@@ -104,7 +103,7 @@ for person_id in tqdm(os.listdir(path_to_mp4)):
                 
             try:
                 video_path = os.path.join(path_to_mp4, person_id, video_id, video)
-                frame_mark = pick_images(video_path, saves_dir+'/' + person_id+'/'+video_id+'/'+video.split('.')[0], K)
+                frame_mark = pick_images(video_path, path_to_preprocess+'/' + person_id+'/'+video_id+'/'+video.split('.')[0], K)
                 frame_mark = generate_landmarks(frame_mark, face_aligner)
                 if len(frame_mark) == K:
                     final_list = [frame_mark[i][0] for i in range(K)]
@@ -115,10 +114,10 @@ for person_id in tqdm(os.listdir(path_to_mp4)):
                     final_list = np.reshape(final_list, (224, 224*2*K, 3))
                     final_list = cv2.cvtColor(final_list, cv2.COLOR_BGR2RGB)
                     
-                    if not os.path.isdir(saves_dir+"/"+str(num_vid//256)):
-                        os.mkdir(saves_dir+"/"+str(num_vid//256))
+                    if not os.path.isdir(path_to_preprocess+"/"+str(num_vid//256)):
+                        os.mkdir(path_to_preprocess+"/"+str(num_vid//256))
                         
-                    cv2.imwrite(saves_dir+"/"+str(num_vid//256)+"/"+str(num_vid)+".png", final_list)
+                    cv2.imwrite(path_to_preprocess+"/"+str(num_vid//256)+"/"+str(num_vid)+".png", final_list)
                     num_vid += 1
                     break #take only one video
 
