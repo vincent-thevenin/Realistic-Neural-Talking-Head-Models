@@ -18,7 +18,7 @@ from network.blocks import *
 from network.model import *
 from tqdm import tqdm
 
-from params.params import K, path_to_chkpt, path_to_backup, path_to_Wi, batch_size, path_to_preprocess, frame_shape
+from params.params import K, path_to_chkpt, path_to_backup, path_to_Wi, batch_size, path_to_preprocess, frame_shape, VGG19_caffe_weight_path
 
 """Create dataset and net"""
 display_training = False
@@ -48,7 +48,9 @@ optimizerD = optim.Adam(params = D.parameters(),
 
 """Criterion"""
 criterionG = LossG(VGGFace_body_path='Pytorch_VGGFACE_IR.py',
-                   VGGFace_weight_path='Pytorch_VGGFACE.pth', device=device)
+                   VGGFace_weight_path='Pytorch_VGGFACE.pth',
+                   VGG19_CAFFE_weight_path=VGG19_caffe_weight_path,
+                device=device)
 criterionDreal = LossDSCreal()
 criterionDfake = LossDSCfake()
 

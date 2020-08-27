@@ -24,3 +24,6 @@ frame_shape = 224
 
 #path to dataset
 path_to_mp4 = '/mnt/ACA21355A21322FE/VoxCeleb/vox2_mp4/dev/mp4'
+
+# VGG19CAFFE_weight_path
+VGG19_caffe_weight_path = '/dataset/ljw/pretrained_models/VGG/vgg19-d01eb7cb.pth'

@@ -47,6 +47,17 @@ Pytorch code and weights to Pytorch model
 
 At this point, you will have a few files in your directory. To save some space you can delete everything and keep **Pytorch_VGGFACE_IR.py** and **Pytorch_VGGFACE.pth**
 
+#### 1.1. Download caffe-trained version of VGG19 converted to pytorch for the content loss:
+Download caffe-trained version of VGG19 converted to pytorch  from https://web.eecs.umich.edu/~justincj/models/vgg19-d01eb7cb.pth
+
+As there are some layer names mismatching in the converted model, 
+
+change `VGG19_caffe_weight_path` in params.py to your path and run
+```
+python change_vgg19_caffelayer_name.py
+```
+
+
 ### 2.Libraries
 - face-alignment
 - torch
