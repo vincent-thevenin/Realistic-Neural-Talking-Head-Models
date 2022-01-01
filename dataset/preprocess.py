@@ -7,7 +7,7 @@ import cv2
 from tqdm import tqdm
 import face_alignment
 from matplotlib import pyplot as plt
-from .params.params import path_to_mp4, path_to_preprocess
+from params.params import path_to_mp4, path_to_preprocess
 
 K = 8
 num_vid = 0
