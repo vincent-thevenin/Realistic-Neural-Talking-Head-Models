@@ -3,7 +3,8 @@ Implementation of Few-Shot Adversarial Learning of Realistic Neural Talking Head
 
 This repo is based on https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models
 
-### My changes to the original repo
+
+## My changes to the original repo
 Download [caffe-trained version of VGG19 converted to pytorch ](https://web.eecs.umich.edu/~justincj/models/vgg19-d01eb7cb.pth).
 
 As there are some layer names mismatching in the converted model, 
@@ -29,9 +30,7 @@ x_hat_vggface = x_hat * 255 - self.vggface_caffe_RGB_mean
 x_hat_vggface = x_hat_vggface[:,[2,1,0],:,:] # B RGB H W -> B BGR H W
 ```
 
-
----
-### Explanations
+## Explanations
 The vgg19 and vggface loss mentioned in the paper are caffe trained version, the input should be in BGR order, [0-255].
 
 However, in the original repo, vgg19 and vggface takes images in RGB order, and [0-1] normalized, while keeping the weights the same with paper, i.e.` vgg19_weight=1.5e-1, vggface_weight=2.5e-2`.
@@ -41,8 +40,7 @@ So either change the weight of the losses, or change the pretrained model to caf
 For me, I download the caffe version of vgg19 from https://github.com/jcjohnson/pytorch-vgg, 
 and make the input to vgg in range of [0-255], BGR order.
 
----
-
+## Results
 The following results are generated from the same person (id_08696) with different driving videos.
 
 **Click the images to view video results on Youtube**
