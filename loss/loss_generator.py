@@ -10,14 +10,13 @@ class LossCnt(nn.Module):
     def __init__(self, VGGFace_body_path, VGGFace_weight_path, VGG19_CAFFE_weight_path, device):
         super(LossCnt, self).__init__()
         
-        self.VGG19 = vgg19(pretrained=True)
-        if VGG19_CAFFE_weight_path is None:
-            self.VGG19 = vgg19(pretrained=True)
-        else:
-            self.VGG19 = vgg19(pretrained=False)
-            full_vgg19 = torch.load(VGG19_CAFFE_weight_path, map_location = 'cpu')
-            # self.VGG19.load(VGG19_CAFFE_weight_path)
-            self.VGG19.load_state_dict(full_vgg19)
+        ''' 
+            we cannot use pytorch pretrained vgg 19 as caffe is used in paper
+        '''
+        self.VGG19 = vgg19(pretrained=False)
+        full_vgg19 = torch.load(VGG19_CAFFE_weight_path, map_location = 'cpu')
+        self.VGG19.load_state_dict(full_vgg19)
+        
         
         self.VGG19.eval()
         self.VGG19.to(device)
