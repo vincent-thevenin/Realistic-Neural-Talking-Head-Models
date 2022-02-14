@@ -10,9 +10,8 @@ class LossCnt(nn.Module):
     def __init__(self, VGGFace_body_path, VGGFace_weight_path, VGG19_CAFFE_weight_path, device):
         super(LossCnt, self).__init__()
         
-        ''' 
-            we cannot use pytorch pretrained vgg 19 as caffe is used in paper
-        '''
+         
+        """we cannot use pytorch pretrained vgg 19 as caffe is used in paper"""
         self.VGG19 = vgg19(pretrained=False)
         full_vgg19 = torch.load(VGG19_CAFFE_weight_path, map_location = 'cpu')
         self.VGG19.load_state_dict(full_vgg19)
