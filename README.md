@@ -31,14 +31,13 @@ x_hat_vggface = x_hat_vggface[:,[2,1,0],:,:] # B RGB H W -> B BGR H W
 ```
 
 ## Explanations
-The vgg19 and vggface loss mentioned in the paper are caffe trained version, the input should be in BGR order, [0-255].
+The vgg19 and vggface loss mentioned in the paper are _**caffe trained version**_, the input should be in range _**0-255**_, and in _**BGR**_ order.
 
-However, in the original repo, vgg19 and vggface takes images in RGB order, and [0-1] normalized, while keeping the weights the same with paper, i.e.` vgg19_weight=1.5e-1, vggface_weight=2.5e-2`.
+However, in the original repo, vgg19 and vggface takes images in _**RGB**_ order with value _**0-1**_, but the losses weights the same as paper, i.e.` vgg19_weight=1.5e-1, vggface_weight=2.5e-2`, which cause these two losses to be very small compared to other loss terms.
 
 So either change the weight of the losses, or change the pretrained model to caffe pretrained version to balance the losses. 
 
-For me, I download the caffe version of vgg19 from https://github.com/jcjohnson/pytorch-vgg, 
-and make the input to vgg in range of [0-255], BGR order.
+For me, I download the caffe version of vgg19 from https://github.com/jcjohnson/pytorch-vgg, and use  _**0-255, BGR order**_ to calculate vgg loss.
 
 ## Results
 The following results are generated from the same person (id_08696) with different driving videos.
