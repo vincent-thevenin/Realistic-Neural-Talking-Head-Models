@@ -1,102 +1,62 @@
 # Realistic-Neural-Talking-Head-Models
+Implementation of Few-Shot Adversarial Learning of Realistic Neural Talking Head Models (Egor Zakharov et al.). https://arxiv.org/abs/1905.08233
 
-My implementation of Few-Shot Adversarial Learning of Realistic Neural Talking Head Models (Egor Zakharov et al.). https://arxiv.org/abs/1905.08233
-
-![Fake1](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/1%201.png "Fake 1")
-![Real1](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/1%202.png "Real 1")
-
-![Fake2](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/2%201.png "Fake 2")
-![Real2](https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models/blob/master/examples/2%202.png "Real 2")
-
-*Inference after 5 epochs of training on the smaller test dataset, due to a lack of compute ressources I stopped early (author did 75 epochs with finetuning method and 150 with feed-forward method on the full dataset).*
-
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=F2vms-eUrYs
-" target="_blank"><img src="http://img.youtube.com/vi/F2vms-eUrYs/0.jpg" 
-alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
+This repo is based on https://github.com/vincent-thevenin/Realistic-Neural-Talking-Head-Models
 
 
+## My changes to the original repo
+Download [caffe-trained version of VGG19 converted to pytorch ](https://web.eecs.umich.edu/~justincj/models/vgg19-d01eb7cb.pth).
 
+As there are some layer names mismatching in the converted model, 
 
-
-## Prerequisites
-
-### 1.Loading and converting the caffe VGGFace model to pytorch for the content loss:
-Follow these instructions to install the VGGFace from the paper (https://arxiv.org/pdf/1703.07332.pdf):
-
+change `VGG19_caffe_weight_path` in params.py to your path and run
 ```
-$ wget http://www.robots.ox.ac.uk/~vgg/software/vgg_face/src/vgg_face_caffe.tar.gz
-$ tar xvzf vgg_face_caffe.tar.gz
-$ sudo apt install caffe-cuda
-$ pip install mmdnn
+python change_vgg19_caffelayer_name.py
 ```
 
-Convert Caffe to IR (Intermediate Representation)
 
-`$ mmtoir -f caffe -n vgg_face_caffe/VGG_FACE_deploy.prototxt -w vgg_face_caffe/VGG_FACE.caffemodel -o VGGFACE_IR`
+Main code changes in `loss_generator.py`:
+```
+self.vgg19_caffe_RGB_mean = torch.FloatTensor([123.68, 116.779, 103.939]).view(1, 3, 1, 1).to(device) # RGB order
+self.vggface_caffe_RGB_mean = torch.FloatTensor([129.1863,104.7624,93.5940]).view(1, 3, 1, 1).to(device) # RGB order
 
-**If you have a problem with pickle, delete your numpy and reinstall numpy with version 1.16.1**
+x_vgg19 = x * 255  - self.vgg19_caffe_RGB_mean
+x_vgg19 = x_vgg19[:,[2,1,0],:,:]
+x_hat_vgg19 = x_hat * 255 - self.vgg19_caffe_RGB_mean
+x_hat_vgg19 = x_hat_vgg19[:,[2,1,0],:,:]
+x_vggface = x * 255 - self.vggface_caffe_RGB_mean
+x_vggface = x_vggface[:,[2,1,0],:,:] # B RGB H W -> B BGR H W
+x_hat_vggface = x_hat * 255 - self.vggface_caffe_RGB_mean
+x_hat_vggface = x_hat_vggface[:,[2,1,0],:,:] # B RGB H W -> B BGR H W
+```
 
-IR to Pytorch code and weights
+## Explanations
+The vgg19 and vggface loss mentioned in the paper are _**caffe trained version**_, the input should be in range _**0-255**_, and in _**BGR**_ order.
 
-`$ mmtocode -f pytorch -n VGGFACE_IR.pb --IRWeightPath VGGFACE_IR.npy --dstModelPath Pytorch_VGGFACE_IR.py -dw Pytorch_VGGFACE_IR.npy`
+However, in the original repo, vgg19 and vggface takes images in _**RGB**_ order with value _**0-1**_, but the losses weights the same as paper, i.e.` vgg19_weight=1.5e-1, vggface_weight=2.5e-2`, which cause these two losses to be very small compared to other loss terms.
 
-Pytorch code and weights to Pytorch model
+So either change the weight of the losses, or change the pretrained model to caffe pretrained version to balance the losses. 
 
-`$ mmtomodel -f pytorch -in Pytorch_VGGFACE_IR.py -iw Pytorch_VGGFACE_IR.npy -o Pytorch_VGGFACE.pth`
+For me, I download the caffe version of vgg19 from https://github.com/jcjohnson/pytorch-vgg, and use  _**0-255, BGR order**_ to calculate vgg loss.
 
+## Results
+The following results are generated from the same person (id_08696) with different driving videos.
 
-At this point, you will have a few files in your directory. To save some space you can delete everything and keep **Pytorch_VGGFACE_IR.py** and **Pytorch_VGGFACE.pth**
+**Click the images to view video results on Youtube**
 
-### 2.Libraries
-- face-alignment
-- torch
-- numpy
-- cv2 (opencv-python)
-- matplotlib
-- tqdm
+**1. Feed forward without finetuning**
 
-### 3.VoxCeleb2 Dataset
-The VoxCeleb2 dataset has videos in zip format. (Very heavy 270GB for the dev one and 8GB for the test)
-http://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox2.html
+[![](http://img.youtube.com/vi/HFI03fymvqI/0.jpg)](http://www.youtube.com/watch?v=HFI03fymvqI "")
+[![](http://img.youtube.com/vi/Oz4AzhH5d0o/0.jpg)](http://www.youtube.com/watch?v=Oz4AzhH5d0o "")
 
-### 4.Optional, my pretrained weights
-Available at https://drive.google.com/open?id=1vdFz4sh23hC_KIQGJjwbTfUdPG-aYor8
+**2. Fine tuning for 100 epochs**
 
-## How to use:
-- modify paths in params folder to reflect your path
-- preprocess.py: preprocess our data for faster inference and lighter dataset
-- train.py: initialize and train the network or continue training from trained network
-- embedder_inference.py: (Requires trained model) Run the embedder on videos or images of a person and get embedding vector in tar file 
-- fine_tuning_trainng.py: (Requires trained model and embedding vector) finetune a trained model
-- webcam_inference.py: (Requires trained model and embedding vector) run the model using person from embedding vector and webcam input, just inference
-- video_inference.py: just like webcam_inference but on a video, change the path of the video at the start of the file
+[![](http://img.youtube.com/vi/WQ9z6GKu5_c/0.jpg)](http://www.youtube.com/watch?v=WQ9z6GKu5_c "")
+[![](http://img.youtube.com/vi/O4WLB90m48U/0.jpg)](http://www.youtube.com/watch?v=O4WLB90m48U "")
 
+As we can see, identity gap exists in feed forward results, but can be briged by finetuning. 
 
-## Architecture
+**3. More results:**
 
-I followed the architecture guidelines from the paper on top of details provided by M. Zakharov.
-
-The images that are fed from voxceleb2 are resized from 224x224 to 256x256 by using zero-padding. This is done so that spatial dimensions don't get rounded when passing through downsampling layers.
-
-The residuals blocks are from [LARGE SCALE GAN TRAINING FOR HIGH FIDELITY NATURAL IMAGE SYNTHESIS](https://arxiv.org/pdf/1809.11096.pdf)(K. S. Andrew Brock, Jeff Donahue.).
-
-**Embedder**
-
-The embedder uses 6 downsampling residual blocks with no normalisation. A self-attention layer is added in the middle.
-The output from the last residual block is resized to a vector of size 512 via maxpooling.
-
-**Generator**
-
-The downsampling part of the generator uses the same architecture as the embedder with instance normalization added at each block following the paper.
-
-The same dimension residual part uses 5 blocks. These blocks use adaptive instance normalization. Unlike the [AdaIN paper](https://arxiv.org/pdf/1703.06868.pdf)(Xun Huang et al.) where the alpha and beta learnable parameters from instance normalisation are replaced with mean and variance of the input style, the adaptative parameters (mean and variance) are taken from psi. With psi = P\*e, P the projection matrix and e the embedding vector calculated by the embedder.
-
-(*P is of size 2\*(512\*2\*5 + 512\*2 + 512\*2+ 512+256 + 256+128 + 128+64 + 64+3) x 512 = 17158 x 512*)
-
-There are then 6 upsampling residual blocks. The final output is a tensor of dimensions 3x224x224. I rescale the image using a sigmoid and multiplying by 255. There are two adaIN layers in each upsampling block (they replace the normalisation layers from the Biggan paper).
-
-Self-attention layers are added both in the downsampling part and upsampling part of the generator.
-
-**Discriminator**
-
-The discriminator uses the same architecture as the embedder.
+[![](http://img.youtube.com/vi/JBgnSG_t32M/0.jpg)](http://www.youtube.com/watch?v=JBgnSG_t32M "")
+[![](http://img.youtube.com/vi/0gRR234skEA/0.jpg)](http://www.youtube.com/watch?v=0gRR234skEA "")

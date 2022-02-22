@@ -7,13 +7,21 @@ from network.model import Cropped_VGG19
 
 
 class LossCnt(nn.Module):
-    def __init__(self, VGGFace_body_path, VGGFace_weight_path, device):
+    def __init__(self, VGGFace_body_path, VGGFace_weight_path, VGG19_CAFFE_weight_path, device):
         super(LossCnt, self).__init__()
         
-        self.VGG19 = vgg19(pretrained=True)
+         
+        """we cannot use pytorch pretrained vgg 19 as caffe is used in paper"""
+        self.VGG19 = vgg19(pretrained=False)
+        full_vgg19 = torch.load(VGG19_CAFFE_weight_path, map_location = 'cpu')
+        self.VGG19.load_state_dict(full_vgg19)
+        
+        
         self.VGG19.eval()
         self.VGG19.to(device)
         
+        self.vgg19_caffe_RGB_mean = torch.FloatTensor([123.68, 116.779, 103.939]).view(1, 3, 1, 1).to(device) # RGB order
+        self.vggface_caffe_RGB_mean = torch.FloatTensor([129.1863,104.7624,93.5940]).view(1, 3, 1, 1).to(device) # RGB order
         
         MainModel = imp.load_source('MainModel', VGGFace_body_path)
         full_VGGFace = torch.load(VGGFace_weight_path, map_location = 'cpu')
@@ -27,12 +35,24 @@ class LossCnt(nn.Module):
         self.conv_idx_list = [2,7,12,21,30] #idxes of conv layers in VGG19 cf.paper
 
     def forward(self, x, x_hat, vgg19_weight=1.5e-1, vggface_weight=2.5e-2):        
+        x_vgg19 = x * 255  - self.vgg19_caffe_RGB_mean
+        x_vgg19 = x_vgg19[:,[2,1,0],:,:]
+        x_hat_vgg19 = x_hat * 255 - self.vgg19_caffe_RGB_mean
+        x_hat_vgg19 = x_hat_vgg19[:,[2,1,0],:,:]
+
+        x_vggface = x * 255 - self.vggface_caffe_RGB_mean
+        x_vggface = x_vggface[:,[2,1,0],:,:] # B RGB H W -> B BGR H W
+        x_hat_vggface = x_hat * 255 - self.vggface_caffe_RGB_mean
+        x_hat_vggface = x_hat_vggface[:,[2,1,0],:,:] # B RGB H W -> B BGR H W
+        
         """Retrieve vggface feature maps"""
         with torch.no_grad(): #no need for gradient compute
-            vgg_x_features = self.VGGFace(x) #returns a list of feature maps at desired layers
+            # vgg_x_features = self.VGGFace(x) #returns a list of feature maps at desired layers
+            vgg_x_features = self.VGGFace(x_vggface) #returns a list of feature maps at desired layers
 
         with torch.autograd.enable_grad():
-            vgg_xhat_features = self.VGGFace(x_hat)
+            # vgg_xhat_features = self.VGGFace(x_hat)
+            vgg_xhat_features = self.VGGFace(x_hat_vggface)
 
         lossface = 0
         for x_feat, xhat_feat in zip(vgg_x_features, vgg_xhat_features):
@@ -64,7 +84,8 @@ class LossCnt(nn.Module):
 
         #run model for x
         with torch.no_grad():
-            self.VGG19(x)
+            # self.VGG19(x)
+            self.VGG19(x_vgg19)
 
         #retrieve features for x
         for h in vgg_x_handles:
@@ -96,7 +117,8 @@ class LossCnt(nn.Module):
                     if conv_idx_iter < len(self.conv_idx_list)-1:
                         conv_idx_iter += 1
                     vgg_xhat_handles.append(m.register_forward_hook(vgg_xhat_hook))
-            self.VGG19(x_hat)
+            # self.VGG19(x_hat)
+            self.VGG19(x_hat_vgg19)
         
             #retrieve features for x
             for h in vgg_xhat_handles:
@@ -156,10 +178,10 @@ class LossG(nn.Module):
     Inputs: x, x_hat, r_hat, D_res_list, D_hat_res_list, e, W, i
     output: lossG
     """
-    def __init__(self, VGGFace_body_path, VGGFace_weight_path, device):
+    def __init__(self, VGGFace_body_path, VGGFace_weight_path, VGG19_CAFFE_weight_path, device):
         super(LossG, self).__init__()
         
-        self.lossCnt = LossCnt(VGGFace_body_path, VGGFace_weight_path, device)
+        self.lossCnt = LossCnt(VGGFace_body_path, VGGFace_weight_path, VGG19_CAFFE_weight_path, device)
         self.lossAdv = LossAdv()
         self.lossMatch = LossMatch(device=device)
         
@@ -176,10 +198,10 @@ class LossGF(nn.Module):
     Inputs: x, x_hat, r_hat, D_res_list, D_hat_res_list, e, W, i
     output: lossG
     """
-    def __init__(self, VGGFace_body_path, VGGFace_weight_path, device, vgg19_weight=1e-2, vggface_weight=2e-3):
+    def __init__(self, VGGFace_body_path, VGGFace_weight_path,VGG19_CAFFE_weight_path, device, vgg19_weight=1e-2, vggface_weight=2e-3):
         super(LossGF, self).__init__()
         
-        self.LossCnt = LossCnt(VGGFace_body_path, VGGFace_weight_path, device)
+        self.LossCnt = LossCnt(VGGFace_body_path, VGGFace_weight_path,VGG19_CAFFE_weight_path, device)
         self.lossAdv = LossAdv()
         
     def forward(self, x, x_hat, r_hat, D_res_list, D_hat_res_list):
